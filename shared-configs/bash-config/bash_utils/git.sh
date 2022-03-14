@@ -30,7 +30,7 @@ gb() {
   local query=$1
   local branchPattern="refs/heads/"$([ $# -eq 0 ] && echo '*-*' || echo "*$query*")
   local opts=()
-  local raw_branches=(git for-each-ref --format='%(refname:short)' "$branchPattern" --ignore-case)
+  local raw_branches=$(git for-each-ref --format='%(refname:short)' "$branchPattern" --ignore-case)
   local currBranch=$(getBranchName)
   while read line; do if [[ $line != $currBranch ]]; then opts+=("$line"); fi; done < <($raw_branches)
   local optsLen=${#opts[@]}

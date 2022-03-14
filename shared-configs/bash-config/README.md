@@ -6,9 +6,19 @@
 
 After getting everything setup, you can just run `updateSettings` to load the latest version of these config files to your machine.
 
-For the initial set up, run the following code in the terminal (with the correct path to this git repo):
+For the initial set up, run the following code in the terminal (with the correct path to this git repo, locally):
 
 ```
 source $PATH_TO_REPO/shared-configs/bash-config/bash_utils/system.sh
 updateSettings
 ```
+
+## Setting default terminal to bash
+
+### Mac terminal
+
+Terminal settings > General > Shell opens with > Command > /bin/bash
+
+### VS Code
+
+Command pallette > Terminal: Select default profile
