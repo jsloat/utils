@@ -1,6 +1,10 @@
 ## Dependencies
 
 - [VS Code CLI util](https://code.visualstudio.com/docs/setup/mac)
+- nvm
+- Updated bash
+  - Mac ships with a very old version, need to update it.
+  - [Installing updated bash on Mac](https://itnext.io/upgrading-bash-on-macos-7138bd1066ba)
 
 ## First-time installation
 

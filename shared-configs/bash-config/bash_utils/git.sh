@@ -28,15 +28,29 @@ goback() {
 # Git branch
 gb() {
   local query=$1
-  local branchPattern="refs/heads/"$([ $# -eq 0 ] && echo '*-*' || echo "*$query*")
+  local branchPattern="refs/heads/"$([ $# -eq 0 ] && echo '' || echo "*$query*")
   local opts=()
-  local raw_branches=$(git for-each-ref --format='%(refname:short)' "$branchPattern" --ignore-case)
   local currBranch=$(getBranchName)
-  while read line; do if [[ $line != $currBranch ]]; then opts+=("$line"); fi; done < <($raw_branches)
+
+  local raw_branches_str=$(git for-each-ref --format='%(refname:short)' "$branchPattern" --ignore-case)
+  # https://stackoverflow.com/questions/24628076/convert-multiline-string-to-array
+  local OLD_IFS=$IFS
+  IFS=$'\n'
+  local raw_branches_arr=($raw_branches_str)
+  IFS=$OLD_IFS
+
+  # https://stackoverflow.com/questions/3578584/bash-how-to-delete-elements-from-an-array-based-on-a-pattern
+  for index in "${!raw_branches_arr[@]}"; do
+    local brName=${raw_branches_arr[$index]}
+    if [[ $brName != $currBranch ]]; then
+      opts+=("$brName")
+    fi
+  done
+
   local optsLen=${#opts[@]}
   case $optsLen in
   0) echo "No branches found" ;;
-  1) git checkout "$opts[1]" ;;
+  1) git checkout "${opts[0]}" ;;
   *) select branch in "${opts[@]}"; do
     git checkout "$branch"
     break

@@ -44,6 +44,7 @@ updateSettings() {
     _pullLatestBashSettings
   fi
   _overwriteBashSettings
+  echo "Reloading"
   reload
   echo "Done"
 }
