@@ -1,0 +1,19 @@
+{
+  "name": "utils",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "deploy-and-update-bash": "source ./shared-configs/bash-config/bash_utils/system.sh;git push;_overwriteBashSettings"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsloat/utils.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jsloat/utils/issues"
+  },
+  "homepage": "https://github.com/jsloat/utils#readme"
+}
