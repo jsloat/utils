@@ -96,3 +96,4 @@ alias fgrim='gcm;gl;gc-;grim'
 alias gdel='gcm;git branch -D @{-1}'
 # Reset hard to remote branch
 alias rerem='git reset --hard origin/''$(getBranchName)'
+alias glol="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'"
