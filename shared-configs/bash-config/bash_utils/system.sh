@@ -34,7 +34,7 @@ _overwriteBashSettings() {
   cp -f $BASH_CONFIG_REPO_DIR/bash_profile.sh $HOME/.bash_profile
 }
 
-alias settings="code $UTILS_REPO_PATH"
+alias settings="_pullLatestBashSettings;code $UTILS_REPO_PATH"
 alias reload="source $HOME/.bashrc"
 
 # Pass "nopull" to skip pulling latest from master
@@ -44,7 +44,6 @@ updateSettings() {
     _pullLatestBashSettings
   fi
   _overwriteBashSettings
-  echo "Reloading"
   reload
   echo "Done"
 }
