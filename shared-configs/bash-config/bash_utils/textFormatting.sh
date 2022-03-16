@@ -9,6 +9,7 @@ _getFormattingCode() {
   dim) echo "2" ;;
   blue) echo "34" ;;
   red) echo "31" ;;
+  green) echo "32" ;;
   # Fallback to normal text formatting
   *) echo "0" ;;
   esac

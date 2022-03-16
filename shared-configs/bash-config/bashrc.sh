@@ -9,11 +9,11 @@ fi
 
 # https://stackoverflow.com/questions/17333531/how-can-i-display-the-current-branch-and-folder-path-in-terminal
 _prettify_git_branch() {
-  git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+  git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ [\1]/'
 }
 
 # Customizes the terminal prompt to show curr directory & git repo/branch (if any)
-export PS1="\[\033[32m\]\w\$(_prettify_git_branch)\[\033[00m\]: "
+export PS1="\e[2m\w\e[32m\$(_prettify_git_branch)\e[2m: \e[0m"
 
 export PATH="/usr/local/bin:$PATH"
 
