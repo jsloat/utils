@@ -49,7 +49,7 @@ gb() {
 
   local optsLen=${#opts[@]}
   case $optsLen in
-  0) echo "No branches found" ;;
+  0) _echoError "No branches found" ;;
   1) git checkout "${opts[0]}" ;;
   *) select branch in "${opts[@]}"; do
     git checkout "$branch"
@@ -64,12 +64,12 @@ _runGitCommandWithMasterProtection() {
   local shouldForce=$2
   local br=$(getBranchName)
   if [[ $br == "master" ]] && [[ $shouldForce != "force" ]]; then
-    echo "Use 'force' argument to perform this operation on master. Are you on the correct branch?"
+    _echoError "Use 'force' argument to perform this operation on master. Are you on the correct branch?"
   else
     case $commandKey in
     push) git push ;;
     push-force) git push --force-with-lease ;;
-    *) echo "Invalid command" ;;
+    *) _echoError "Invalid command" ;;
     esac
   fi
 }
@@ -92,7 +92,7 @@ gbsort() {
 }
 
 orphans() {
-  echo "Branches without remote counterparts:"
+  _echoAnnouncement "Branches without remote counterparts:"
   git branch --format "%(refname:short) %(upstream)" | awk '{if (!$2) print $1;}'
 }
 

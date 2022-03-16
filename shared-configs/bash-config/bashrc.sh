@@ -1,3 +1,4 @@
+source ~/bash_utils/textFormatting.sh
 source ~/bash_utils/common.sh
 source ~/bash_utils/git.sh
 source ~/bash_utils/system.sh

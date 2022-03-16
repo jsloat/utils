@@ -3,7 +3,7 @@ UTILS_REPO_PATH="$HOME/Dev/utils"
 BASH_CONFIG_REPO_DIR="$UTILS_REPO_PATH/shared-configs/bash-config"
 
 _pullLatestBashSettings() {
-  echo "Pulling latest settings from GitHub"
+  _echoAnnouncement 'Pulling latest settings from GitHub'
   local INIT_DIR=$(pwd)
   cd "$UTILS_REPO_PATH"
   git checkout master
@@ -25,7 +25,7 @@ _makeFileIfMissing() {
 
 # NB: This will overwrite files in the root directory
 _overwriteBashSettings() {
-  echo "Copying files"
+  _echoAnnouncement 'Copying files'
   _makeFileIfMissing $HOME/bash_utils folder
   cp -Rf $BASH_CONFIG_REPO_DIR/bash_utils/ $HOME/bash_utils
   _makeFileIfMissing $HOME/.bashrc file
@@ -35,7 +35,7 @@ _overwriteBashSettings() {
 }
 
 alias settings="_pullLatestBashSettings;code $UTILS_REPO_PATH"
-alias reload="echo 'Reloading terminal session';source $HOME/.bashrc"
+alias reload="_echoAnnouncement 'Reloading terminal session';source $HOME/.bashrc"
 
 # Pass "local" to skip pulling latest from master
 refresh() {
@@ -45,5 +45,5 @@ refresh() {
   fi
   _overwriteBashSettings
   reload
-  echo "Done"
+  _echoAnnouncement "Done"
 }
