@@ -12,7 +12,7 @@ _prettify_git_branch() {
 }
 
 # Customizes the terminal prompt to show curr directory & git repo/branch (if any)
-export PS1="\u@\h \[\033[32m\]\w\$(_prettify_git_branch)\[\033[00m\] $ "
+export PS1="\[\033[32m\]\w\$(_prettify_git_branch)\[\033[00m\] $ "
 
 export PATH="/usr/local/bin:$PATH"
 
