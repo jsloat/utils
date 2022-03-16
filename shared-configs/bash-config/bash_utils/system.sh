@@ -35,12 +35,12 @@ _overwriteBashSettings() {
 }
 
 alias settings="_pullLatestBashSettings;code $UTILS_REPO_PATH"
-alias reload="source $HOME/.bashrc"
+alias reload="echo 'Reloading terminal session';source $HOME/.bashrc"
 
-# Pass "nopull" to skip pulling latest from master
-updateSettings() {
-  local noPull=$1
-  if [[ $noPull != 'nopull' ]]; then
+# Pass "local" to skip pulling latest from master
+refresh() {
+  local isLocal=$1
+  if [[ $isLocal != 'local' ]]; then
     _pullLatestBashSettings
   fi
   _overwriteBashSettings
