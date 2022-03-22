@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "deploy-bash": "source ./shared-configs/bash-config/bash_utils/system.sh;git push;_overwriteBashSettings"
+    "deploy-bash": "source ./shared-configs/bash-config/bash_utils/textFormatting.sh;source ./shared-configs/bash-config/bash_utils/system.sh;git push;_overwriteBashSettings"
   },
   "repository": {
     "type": "git",
