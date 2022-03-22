@@ -10,6 +10,10 @@ getJiraKey() {
   echo $(getBranchName | grep -o -E "$REGEX_ISSUE_ID")
 }
 
+pushup() {
+  git push -u origin $(getBranchName)
+}
+
 # Create a new branch of master locally, then push it to origin
 newbr() {
   local branchName=$1
@@ -110,5 +114,8 @@ alias fgrim='gcm;gl;gc-;grim'
 alias gdel='gcm;git branch -D @{-1}'
 # Reset hard to remote branch
 alias rerem='git reset --hard origin/''$(getBranchName)'
+# Reset hard to previous local branch
+alias relast='git reset --hard @{-1}'
 alias glol="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'"
 alias freshen='git pull --rebase origin master'
+alias amend='git add .;git commit --amend'
