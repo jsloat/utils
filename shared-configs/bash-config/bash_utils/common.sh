@@ -1,3 +1,5 @@
+#!/bin/bash
+
 openUrl() {
   local url=$1
   /usr/bin/open -a "/Applications/Brave Browser.app" "$url"
@@ -9,7 +11,8 @@ openUrl() {
 fsearch() {
   local query=$1
   local maybeDir=$2
-  local dir=$([ $# -eq 2 ] && echo $maybeDir || echo '.')
+  local dir
+  dir=$([ $# -eq 2 ] && echo "$maybeDir" || echo '.')
   grep \
     --ignore-case \
     --recursive \
@@ -19,10 +22,11 @@ fsearch() {
 
 # ls helper
 show() {
+  # shellcheck disable=2010
   case $1 in
   'files') ls -al | grep '^-' ;;
   'all') ls -a ;;
-  'folders') ls -d */ ;;
+  'folders') ls -d ./*/ ;;
   *) ls ;;
   esac
 }

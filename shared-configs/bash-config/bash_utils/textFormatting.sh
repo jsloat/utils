@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # This file generates formatted text, as described here:
 # https://askubuntu.com/questions/528928/how-to-do-underline-bold-italic-strikethrough-color-background-and-size-i
 
@@ -20,21 +22,23 @@ _format() {
   local strToFormat=$1
 
   for key in "${@:2}"; do # All passed arguments starting at index 2
-    formattedStr+="\e[$(_getFormattingCode $key)m"
+    formattedStr+="\e[$(_getFormattingCode "$key")m"
   done
 
   formattedStr+="$strToFormat"
   formattedStr+="\e[0m"
 
-  echo $formattedStr
+  echo "$formattedStr"
 }
 
 _echoAnnouncement() {
   local txt=$1
+  # shellcheck disable=2059
   printf "$(_format "$txt" bold blue)\n"
 }
 
 _echoError() {
   local txt=$1
+  # shellcheck disable=2059
   printf "$(_format "$txt" bold red)\n"
 }

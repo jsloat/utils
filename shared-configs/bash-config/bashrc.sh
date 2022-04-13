@@ -1,3 +1,6 @@
+#!/bin/bash
+# shellcheck disable=1090,1091
+
 source ~/bash_utils/textFormatting.sh
 source ~/bash_utils/common.sh
 source ~/bash_utils/git.sh
@@ -13,6 +16,7 @@ _prettify_git_branch() {
 }
 
 # Customizes the terminal prompt to show curr directory & git repo/branch (if any)
+# shellcheck disable=2025
 export PS1="\e[2m\w\e[32m\$(_prettify_git_branch)\e[2m: \e[0m"
 
 export PATH="/usr/local/bin:$PATH"
