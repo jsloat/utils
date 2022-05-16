@@ -34,7 +34,13 @@ goback() {
 
 # Git branch
 gb() {
-  local query,branchPattern,opts,currBranch,raw_branches_str,OLD_IFS,raw_branches_arr
+  local query
+  local branchPattern
+  local opts
+  local currBranch
+  local raw_branches_str
+  local OLD_IFS
+  local raw_branches_arr
   query=$1
   branchPattern="refs/heads/"$([ $# -eq 0 ] && echo '' || echo "*$query*")
   opts=()
