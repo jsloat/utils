@@ -14,9 +14,7 @@ fi
 _prettify_git_branch() {
   git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ [\1]/'
 }
-
 # Customizes the terminal prompt to show curr directory & git repo/branch (if any)
-# shellcheck disable=2025
-export PS1="\e[2m\w\e[32m\$(_prettify_git_branch)\e[2m: \e[0m"
+export PS1="\n\[\033[32m\]\w\n\$(_prettify_git_branch)\[\033[00m\]: "
 
 export PATH="/usr/local/bin:$PATH"
