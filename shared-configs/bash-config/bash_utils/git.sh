@@ -128,7 +128,7 @@ alias gdel='gcm;git branch -D @{-1}'
 alias rerem='git reset --hard origin/''$(getBranchName)'
 # Reset hard to previous local branch
 alias relast='git reset --hard @{-1}'
-alias glol="git log --graph --pretty='%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'"
+alias glol="git log --pretty='%C(bold blue)%<(10,trunc)%an%Creset %Cgreen%<(10,trunc)%cr%Creset %C(auto)%<(57,trunc)%s%Creset'"
 alias freshen='git pull --rebase origin master'
 alias amend='git add .;git commit --amend'
 alias lastcommit='git log -1 --pretty=%B | cat'
