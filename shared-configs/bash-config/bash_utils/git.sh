@@ -115,7 +115,7 @@ orphans() {
 alias gc-='git checkout -'
 alias gm-='git merge -'
 alias grim='git rebase -i master'
-alias gcwip='git add .;git commit -m "wip"'
+alias gcwip='git add -A;git commit -m "wip"'
 alias gst='git status'
 alias sup='git fetch;gst'
 alias gcm='git checkout master'
