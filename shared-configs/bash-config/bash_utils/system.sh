@@ -42,12 +42,13 @@ alias settings="_pullLatestBashSettings;code $UTILS_REPO_PATH"
 # shellcheck disable=2139
 alias reload="_echoAnnouncement 'Reloading terminal session';source $HOME/.bashrc"
 
-# Pass "local" to skip pulling latest from master
+# Use flag --local to skip pulling latest from master
 refresh() {
-  local isLocal=$1
-  if [[ $isLocal != 'local' ]]; then
-    _pullLatestBashSettings
+  if [[ $1 == 'local' ]]; then
+    echo "Use --local flag instead"
+    return 1
   fi
+  if ! _has_param "--local" "$@"; then _pullLatestBashSettings; fi
   _overwriteBashSettings
   reload
   _echoAnnouncement "Done"

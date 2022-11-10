@@ -2,15 +2,18 @@
 
 # Get current branch name
 getBranchName() {
+  local branch
   branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
   echo "$branch"
 }
 
+# "Project keys must start with an uppercase letter, followed by one or more
+#   uppercase alphanumeric characters"
 getJiraKey() {
   local branchName=$1
-  local REGEX_ISSUE_ID="[a-zA-Z0-9,\.\_\-]+-[0-9]+"
-  # shellcheck disable=2046,2005
-  echo $(getBranchName | grep -o -E "$REGEX_ISSUE_ID")
+  local REGEX_ISSUE_ID="^[A-Z][A-Z\d]{1,}-\d+"
+  key=$(getBranchName | grep -o -E "$REGEX_ISSUE_ID")
+  echo "$key"
 }
 
 pushup() {
@@ -20,6 +23,10 @@ pushup() {
 # Create a new branch of master locally, then push it to origin
 newbr() {
   local branchName=$1
+  if [[ $# -eq 0 ]]; then
+    echo "Provide branch name"
+    return 1
+  fi
   git checkout master
   git fetch
   git reset --hard origin/master
@@ -27,6 +34,7 @@ newbr() {
   git push -u origin "$branchName"
 }
 
+# Unstages the last N commits in the branch
 goback() {
   local num=$1
   git reset HEAD~"$num"
@@ -57,9 +65,7 @@ gb() {
   # https://stackoverflow.com/questions/3578584/bash-how-to-delete-elements-from-an-array-based-on-a-pattern
   for index in "${!raw_branches_arr[@]}"; do
     local brName=${raw_branches_arr[$index]}
-    if [[ $brName != "$currBranch" ]]; then
-      opts+=("$brName")
-    fi
+    if [[ $brName != "$currBranch" ]]; then opts+=("$brName"); fi
   done
 
   local optsLen=${#opts[@]}
@@ -73,33 +79,41 @@ gb() {
   esac
 }
 
+# First param is command (push or push-force)
+# Optional --force flag to force push on master branch.
 _runGitCommandWithMasterProtection() {
-  # push | push-force
   local commandKey=$1
-  local shouldForce=$2
   local br
   br=$(getBranchName)
-  if [[ $br == "master" ]] && [[ $shouldForce != "force" ]]; then
-    _echoError "Use 'force' argument to perform this operation on master. Are you on the correct branch?"
+  if [[ $br == "master" ]] && ! _has_param "--force" "$@"; then
+    _echoError "Use '--force' flag to perform this operation on master. Are you on the correct branch?"
+    return 1
+  fi
+
+  case $commandKey in
+  push) git push ;;
+  push-force) git push --force-with-lease ;;
+  *) _echoError "Invalid command" ;;
+  esac
+
+}
+
+# Guarded git push, optional --force flag
+gp() {
+  if _has_param "--force" "$@"; then
+    _runGitCommandWithMasterProtection push --force
   else
-    case $commandKey in
-    push) git push ;;
-    push-force) git push --force-with-lease ;;
-    *) _echoError "Invalid command" ;;
-    esac
+    _runGitCommandWithMasterProtection push
   fi
 }
 
-# Guarded git push
-gp() {
-  local shouldForce=$1
-  _runGitCommandWithMasterProtection push "$shouldForce"
-}
-
-# Guarded git push force
+# Guarded git push force, optional --force flag
 gpf() {
-  local shouldForce=$1
-  _runGitCommandWithMasterProtection push-force "$shouldForce"
+  if _has_param "--force" "$@"; then
+    _runGitCommandWithMasterProtection push-force --force
+  else
+    _runGitCommandWithMasterProtection push-force
+  fi
 }
 
 # Git branches sorted by last updated (locally)
