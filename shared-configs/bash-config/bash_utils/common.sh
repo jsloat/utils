@@ -40,3 +40,6 @@ _has_param() {
   return 1
 }
 export -f _has_param
+
+# https://superuser.com/questions/552600/how-can-i-find-the-oldest-file-in-a-directory-tree
+alias oldest="find . -type f -print0 | xargs -0 ls -ltr | head -n 10"
