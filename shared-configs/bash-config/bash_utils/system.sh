@@ -39,8 +39,9 @@ _overwriteBashSettings() {
 
 # shellcheck disable=2139
 alias settings="_pullLatestBashSettings;code $UTILS_REPO_PATH"
+alias reload="_echoAnnouncement 'Please use reload_session instead'"
 # shellcheck disable=2139
-alias reload="_echoAnnouncement 'Reloading terminal session';source $HOME/.bashrc"
+alias reload_session="_echoAnnouncement 'Reloading terminal session';source $HOME/.bashrc"
 
 # Use flag --local to skip pulling latest from master
 refresh() {
