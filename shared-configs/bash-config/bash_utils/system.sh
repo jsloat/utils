@@ -51,6 +51,6 @@ refresh() {
   fi
   if ! _has_param "--local" "$@"; then _pullLatestBashSettings; fi
   _overwriteBashSettings
-  reload
+  reload_session
   _echoAnnouncement "Done"
 }

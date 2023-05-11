@@ -1,5 +1,7 @@
 #!/bin/bash
 
+MAIN_BRANCH_NAME=${OVERRIDE_MAIN_BRANCH_NAME:-master}
+
 # Get current branch name
 getBranchName() {
   local branch
@@ -27,9 +29,9 @@ newbr() {
     echo "Provide branch name"
     return 1
   fi
-  git checkout master
+  git checkout "$MAIN_BRANCH_NAME"
   git fetch
-  git reset --hard origin/master
+  git reset --hard origin/"$MAIN_BRANCH_NAME"
   git checkout -b "$branchName"
   git push -u origin "$branchName"
 }
@@ -85,7 +87,7 @@ _runGitCommandWithMasterProtection() {
   local commandKey=$1
   local br
   br=$(getBranchName)
-  if [[ $br == "master" ]] && ! _has_param "--force" "$@"; then
+  if [[ $br == "$MAIN_BRANCH_NAME" ]] && ! _has_param "--force" "$@"; then
     _echoError "Use '--force' flag to perform this operation on master. Are you on the correct branch?"
     return 1
   fi
@@ -128,21 +130,22 @@ orphans() {
 
 alias gc-='git checkout -'
 alias gm-='git merge -'
-alias grim='git rebase -i master'
+alias grim='git rebase -i $MAIN_BRANCH_NAME'
 alias gcwip='git add -A;git commit -m "wip"'
 alias gst='git status'
 alias sup='git fetch;gst'
-alias gcm='git checkout master'
+# shellcheck disable=2139
+alias gcm="git checkout $MAIN_BRANCH_NAME"
 alias gl='git pull'
 # Fetch latest master, then interactive rebase on it
 alias fgrim='gcm;gl;gc-;grim'
 # Switch to master then delete previous local branch
 alias gdel='gcm;git branch -D @{-1}'
 # Reset hard to remote branch
-alias rerem='git reset --hard origin/''$(getBranchName)'
+alias rerem='git reset --hard origin/$(getBranchName)'
 # Reset hard to previous local branch
 alias relast='git reset --hard @{-1}'
 alias glol="git log --pretty='%C(bold blue)%<(10,trunc)%an%Creset %Cgreen%<(10,trunc)%cr%Creset %C(auto)%<(57,trunc)%s%Creset'"
-alias freshen='git pull --rebase origin master'
+alias freshen='git pull --rebase origin $MAIN_BRANCH_NAME'
 alias amend='git add .;git commit --amend'
 alias lastcommit='git log -1 --pretty=%B | cat'

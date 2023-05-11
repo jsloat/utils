@@ -14,7 +14,7 @@ For the initial set up, run the following code in the terminal (with the correct
 ```
 source $PATH_TO_REPO/shared-configs/bash-config/bash_utils/textFormatting.sh
 source $PATH_TO_REPO/shared-configs/bash-config/bash_utils/system.sh
-refresh local
+refresh --local
 ```
 
 ## Setting default terminal to bash
