@@ -25,15 +25,17 @@ pushup() {
 # Create a new branch of master locally, then push it to origin
 newbr() {
   local branchName=$1
+  local prefix=$2
   if [[ $# -eq 0 ]]; then
     echo "Provide branch name"
     return 1
   fi
+  local prefixedBranchName="$prefix$branchName"
   git checkout "$MAIN_BRANCH_NAME"
   git fetch
   git reset --hard origin/"$MAIN_BRANCH_NAME"
-  git checkout -b "$branchName"
-  git push -u origin "$branchName"
+  git checkout -b "$prefixedBranchName"
+  git push -u origin "$prefixedBranchName"
 }
 
 # Unstages the last N commits in the branch
