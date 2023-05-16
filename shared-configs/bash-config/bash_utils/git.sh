@@ -151,3 +151,5 @@ alias glol="git log --pretty='%C(bold blue)%<(10,trunc)%an%Creset %Cgreen%<(10,t
 alias freshen='git pull --rebase origin $MAIN_BRANCH_NAME'
 alias amend='git add .;git commit --amend'
 alias lastcommit='git log -1 --pretty=%B | cat'
+# Show LOC change stats for current branch compared to main branch.
+alias loc="git diff --shortstat $MAIN_BRANCH_NAME"
