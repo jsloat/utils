@@ -135,14 +135,14 @@ alias gm-='git merge -'
 alias grim='git rebase -i $MAIN_BRANCH_NAME'
 alias gcwip='git add -A;git commit -m "wip"'
 alias gst='git status'
-alias sup='git fetch;gst'
+alias sup='git fetch &> /dev/null;gst'
 # shellcheck disable=2139
 alias gcm="git checkout $MAIN_BRANCH_NAME"
 alias gl='git pull'
 # Fetch latest master, then interactive rebase on it
-alias fgrim='gcm;gl;gc-;grim'
+alias fgrim='gcm &> /dev/null;gl &> /dev/null;gc- &> /dev/null;grim'
 # Switch to master then delete previous local branch
-alias gdel='gcm;git branch -D @{-1}'
+alias gdel='gcm &> /dev/null;git branch -D @{-1}'
 # Reset hard to remote branch
 alias rerem='git reset --hard origin/$(getBranchName)'
 # Reset hard to previous local branch
@@ -152,4 +152,4 @@ alias freshen='git pull --rebase origin $MAIN_BRANCH_NAME'
 alias amend='git add .;git commit --amend'
 alias lastcommit='git log -1 --pretty=%B | cat'
 # Show LOC change stats for current branch compared to main branch.
-alias loc="git diff --shortstat $MAIN_BRANCH_NAME"
+alias loc="git fetch &> /dev/null;git diff --shortstat origin/$MAIN_BRANCH_NAME"
