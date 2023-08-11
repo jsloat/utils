@@ -130,6 +130,12 @@ orphans() {
   git branch --format "%(refname:short) %(upstream)" | awk '{if (!$2) print $1;}'
 }
 
+getHeadCommitSHA() {
+  local sha
+  sha=$(git rev-parse --verify HEAD)
+  echo "$sha"
+}
+
 alias gc-='git checkout -'
 alias gm-='git merge -'
 alias grim='git rebase -i $MAIN_BRANCH_NAME'
