@@ -54,7 +54,7 @@ gb() {
   local OLD_IFS
   local raw_branches_arr
   query=$1
-  branchPattern="refs/heads/"$([ $# -eq 0 ] && echo '' || echo "*$query*")
+  branchPattern="refs/heads/**/"$([ $# -eq 0 ] && echo '' || echo "*$query*")
   opts=()
   currBranch=$(getBranchName)
 
