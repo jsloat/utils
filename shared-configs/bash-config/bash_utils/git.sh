@@ -139,7 +139,7 @@ getHeadCommitSHA() {
 brName() {
   local branchTitle=$1
   # Replace any non letter or number characters with dashes to create a branch name
-  echo "$branchTitle" | awk '{print tolower($0)}' | sed -e 's/[^a-zA-Z0-9]/-/g'
+  echo "$branchTitle" | awk '{print tolower($0)}' | sed -e 's/[^a-zA-Z0-9]/-/g' | pbcopy
 }
 
 alias gc-='git checkout -'
