@@ -136,6 +136,12 @@ getHeadCommitSHA() {
   echo "$sha"
 }
 
+brName() {
+  local branchTitle=$1
+  # Replace any non letter or number characters with dashes to create a branch name
+  echo "$branchTitle" | awk '{print tolower($0)}' | sed -e 's/[^a-zA-Z0-9]/-/g'
+}
+
 alias gc-='git checkout -'
 alias gm-='git merge -'
 alias grim='git rebase -i $MAIN_BRANCH_NAME'
