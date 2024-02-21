@@ -43,3 +43,42 @@ export -f _has_param
 
 # https://superuser.com/questions/552600/how-can-i-find-the-oldest-file-in-a-directory-tree
 alias oldest="find . -type f -print0 | xargs -0 ls -ltr | head -n 10"
+
+# Delete function with confirmation, thanks ChatGPT!
+del() {
+  local target="$1"
+  local files_count=0
+  local dirs_count=0
+
+  if [ -d "$target" ]; then
+    files_count=$(find "$target" -type f | wc -l)
+    dirs_count=$(find "$target" -mindepth 1 -type d | wc -l)
+    ((dirs_count++)) # Account for the root directory itself
+  elif [ -f "$target" ]; then
+    files_count=1
+  else
+    echo "Error: '$target' is neither a file nor a directory"
+    return 1
+  fi
+
+  # Display the count of files and directories to be deleted
+  if [ "$dirs_count" -eq 0 ]; then
+    echo "Deleting file '$target'"
+  else
+    echo "Deleting $files_count files and $dirs_count directories in '$target'"
+  fi
+
+  # Ask for confirmation
+  # shellcheck disable=SC2162
+  read -p "Are you sure you want to delete? [y/N] " response
+
+  # Check the user's response
+  if [[ "$response" =~ ^[Yy]$ ]]; then
+    # User confirmed, proceed with deletion
+    rm -rf "$target"
+    echo "Deleted '$target'"
+  else
+    # User canceled, exit without deleting
+    echo "Deletion canceled"
+  fi
+}
