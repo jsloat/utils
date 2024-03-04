@@ -82,3 +82,13 @@ del() {
     echo "Deletion canceled"
   fi
 }
+
+# Kill whatever is running on input port
+killport() {
+  local port=$1
+  if [[ $# -eq 0 ]]; then
+    echo "Provide port value"
+    return 1
+  fi
+  lsof -n -i4TCP:"$port"
+}
