@@ -90,5 +90,12 @@ killport() {
     echo "Provide port value"
     return 1
   fi
-  lsof -n -i4TCP:"$port"
+  local pid
+  pid=$(lsof -ti:"$port")
+  if [ -n "$pid" ]; then
+    kill -9 "$pid"
+    echo "Process running port has been killed."
+  else
+    echo "No process on that port"
+  fi
 }
