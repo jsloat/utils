@@ -99,3 +99,15 @@ killport() {
     echo "No process on that port"
   fi
 }
+
+# Check if port is in use or not
+checkport() {
+  port=$1
+  pid=$(lsof -ti:"$port")
+  if [ -n "$pid" ]; then
+    echo "Port $port is in use."
+    return
+  else
+    echo "Port $port is not in use."
+  fi
+}
