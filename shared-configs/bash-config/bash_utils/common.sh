@@ -85,19 +85,23 @@ del() {
 
 # Kill whatever is running on input port
 killport() {
-  local port=$1
   if [[ $# -eq 0 ]]; then
-    echo "Provide port value"
+    echo "Provide at least one port value"
     return 1
   fi
-  local pid
-  pid=$(lsof -ti:"$port")
-  if [ -n "$pid" ]; then
-    kill -9 "$pid"
-    echo "Process running port has been killed."
-  else
-    echo "No process on that port"
-  fi
+
+  for port in "$@"; do
+    local pids
+    pids=$(lsof -ti:"$port")
+    if [ -n "$pids" ]; then
+      echo "$pids" | while read -r pid; do
+        kill -9 "$pid"
+        echo "Process $pid running on port $port has been killed."
+      done
+    else
+      echo "No process on port $port"
+    fi
+  done
 }
 
 # Check if port is in use or not
@@ -105,9 +109,15 @@ checkport() {
   port=$1
   pid=$(lsof -ti:"$port")
   if [ -n "$pid" ]; then
-    echo "Port $port is in use."
+    _portdetails "$port"
     return
   else
     echo "Port $port is not in use."
   fi
+}
+
+# Echo details about requested port
+_portdetails() {
+  port=$1
+  lsof -i:"$port"
 }
