@@ -22,7 +22,7 @@ _fetch_gpt_response() {
 
 _get_jeeves_response() {
     local prompt="$1"
-    local full_prompt="Generate a Bash script based on the following description: $prompt\nRespond only with valid bash code that can be immediately executed. Do not wrap your response in backticks or include any markdown formatting. Only return valid bash code."
+    local full_prompt="Generate a Bash script for Mac based on the following description: $prompt\nRespond only with valid bash code that can be immediately executed. Do not wrap your response in backticks or include any markdown formatting. Only return valid bash code."
     _fetch_gpt_response "$full_prompt"
 }
 jeeves() {
