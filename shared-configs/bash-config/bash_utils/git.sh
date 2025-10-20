@@ -49,16 +49,20 @@ gb() {
   local query
   local branchPattern
   local opts
+  local branch_map
   local currBranch
   local raw_branches_str
   local OLD_IFS
   local raw_branches_arr
+  local current_timestamp
   query=$1
   branchPattern="refs/heads/"$([ $# -eq 0 ] && echo '' || echo "**/*$query*")
   opts=()
+  declare -A branch_map
   currBranch=$(getBranchName)
+  current_timestamp=$(date +%s)
 
-  raw_branches_str=$(git for-each-ref --format='%(refname:short)' "$branchPattern" --ignore-case)
+  raw_branches_str=$(git for-each-ref --format='%(refname:short)|%(authordate:unix)' "$branchPattern" --ignore-case)
   # https://stackoverflow.com/questions/24628076/convert-multiline-string-to-array
   OLD_IFS=$IFS
   IFS=$'\n'
@@ -68,16 +72,24 @@ gb() {
 
   # https://stackoverflow.com/questions/3578584/bash-how-to-delete-elements-from-an-array-based-on-a-pattern
   for index in "${!raw_branches_arr[@]}"; do
-    local brName=${raw_branches_arr[$index]}
-    if [[ $brName != "$currBranch" ]]; then opts+=("$brName"); fi
+    local line=${raw_branches_arr[$index]}
+    local brName=${line%|*}
+    local timestamp=${line#*|}
+    
+    if [[ $brName != "$currBranch" ]]; then
+      local days_ago=$(( (current_timestamp - timestamp) / 86400 ))
+      local display_name="$brName (-${days_ago}d)"
+      opts+=("$display_name")
+      branch_map["$display_name"]="$brName"
+    fi
   done
 
   local optsLen=${#opts[@]}
   case $optsLen in
   0) _echoError "No branches found" ;;
-  1) git checkout "${opts[0]}" ;;
+  1) git checkout "${branch_map[${opts[0]}]}" ;;
   *) select branch in "${opts[@]}"; do
-    git checkout "$branch"
+    git checkout "${branch_map[$branch]}"
     break
   done ;;
   esac
