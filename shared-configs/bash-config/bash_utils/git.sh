@@ -48,8 +48,8 @@ goback() {
 gb() {
   local query
   local branchPattern
-  local opts
-  local branch_map
+  local display_names
+  local branch_names
   local currBranch
   local raw_branches_str
   local OLD_IFS
@@ -57,8 +57,8 @@ gb() {
   local current_timestamp
   query=$1
   branchPattern="refs/heads/"$([ $# -eq 0 ] && echo '' || echo "**/*$query*")
-  opts=()
-  declare -A branch_map
+  display_names=()
+  branch_names=()
   currBranch=$(getBranchName)
   current_timestamp=$(date +%s)
 
@@ -70,7 +70,7 @@ gb() {
   raw_branches_arr=($raw_branches_str)
   IFS=$OLD_IFS
 
-  # https://stackoverflow.com/questions/3578584/bash-how-to-delete-elements-from-an-array-based-on-a-pattern
+  # Build parallel arrays instead of using associative array
   for index in "${!raw_branches_arr[@]}"; do
     local line=${raw_branches_arr[$index]}
     local brName=${line%|*}
@@ -79,17 +79,23 @@ gb() {
     if [[ $brName != "$currBranch" ]]; then
       local days_ago=$(( (current_timestamp - timestamp) / 86400 ))
       local display_name="$brName (-${days_ago}d)"
-      opts+=("$display_name")
-      branch_map["$display_name"]="$brName"
+      display_names+=("$display_name")
+      branch_names+=("$brName")
     fi
   done
 
-  local optsLen=${#opts[@]}
+  local optsLen=${#display_names[@]}
   case $optsLen in
   0) _echoError "No branches found" ;;
-  1) git checkout "${branch_map[${opts[0]}]}" ;;
-  *) select branch in "${opts[@]}"; do
-    git checkout "${branch_map[$branch]}"
+  1) git checkout "${branch_names[0]}" ;;
+  *) select display_name in "${display_names[@]}"; do
+    # Find the index of the selected display name
+    for i in "${!display_names[@]}"; do
+      if [[ "${display_names[$i]}" == "$display_name" ]]; then
+        git checkout "${branch_names[$i]}"
+        break
+      fi
+    done
     break
   done ;;
   esac
