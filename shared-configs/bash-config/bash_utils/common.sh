@@ -121,3 +121,7 @@ _portdetails() {
   port=$1
   lsof -i:"$port"
 }
+
+path() {
+  i=1; IFS=: read -ra p <<< "$PATH"; for x in "${p[@]}"; do printf "%2d  %s\n" "$i" "$x"; ((i++)); done
+}
