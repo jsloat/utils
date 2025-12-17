@@ -62,7 +62,7 @@ gb() {
   currBranch=$(getBranchName)
   current_timestamp=$(date +%s)
 
-  raw_branches_str=$(git for-each-ref --format='%(refname:short)|%(authordate:unix)' "$branchPattern" --ignore-case)
+  raw_branches_str=$(git for-each-ref --format='%(refname:short)|%(committerdate:unix)' "$branchPattern" --ignore-case | sort -t'|' -k2 -nr)
   # https://stackoverflow.com/questions/24628076/convert-multiline-string-to-array
   OLD_IFS=$IFS
   IFS=$'\n'
@@ -85,6 +85,7 @@ gb() {
   done
 
   local optsLen=${#display_names[@]}
+  COLUMNS=1
   case $optsLen in
   0) _echoError "No branches found" ;;
   1) git checkout "${branch_names[0]}" ;;
