@@ -161,6 +161,14 @@ brName() {
   echo "$branchTitle" | awk '{print tolower($0)}' | sed -e 's/[^a-zA-Z0-9]/-/g' | pbcopy
 }
 
+glol() {
+  local format='%C(bold blue)%<(10,trunc)%an%Creset %Cgreen%<(10,trunc)%cr%Creset %C(auto)%s%Creset'
+  if _has_param "--hash" "$@"; then
+    format="%C(yellow)%h%Creset $format"
+  fi
+  git -c color.ui=always log --pretty="$format" | less -R
+}
+
 alias gc-='git checkout -'
 alias gm-='git merge -'
 alias grim='git rebase -i $MAIN_BRANCH_NAME'
@@ -178,7 +186,6 @@ alias gdel='gcm &> /dev/null;git branch -D @{-1}'
 alias rerem='git reset --hard origin/$(getBranchName)'
 # Reset hard to previous local branch
 alias relast='git reset --hard @{-1}'
-alias glol="git -c color.ui=always log --pretty='%C(bold blue)%<(10,trunc)%an%Creset %Cgreen%<(10,trunc)%cr%Creset %C(auto)%s%Creset' | less -R"
 alias freshen='git pull --rebase origin $MAIN_BRANCH_NAME'
 alias amend='git add .;git commit --amend'
 alias lastcommit='git log -1 --pretty=%B | cat'
