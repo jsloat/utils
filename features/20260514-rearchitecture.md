@@ -178,6 +178,11 @@ Implementation note:
 - use `add_to_path` for high-priority tool directories that should come earlier in lookup order
 - use `append_to_path` only when lower-priority placement is intentional
 
+Current implementation status:
+
+- tracked PATH setup now lives in `shared/path.sh`
+- machine-specific PATH additions now live in `local/path.sh`
+
 ## Private / machine-specific strategy
 
 Keep `private.sh` as the single machine-specific escape hatch.
@@ -242,6 +247,7 @@ PATH mutation rules:
 - final PATH ordering must match the current effective PATH ordering unless a change is explicitly documented in the feature plan
 - tracked shared PATH entries should be declared in `shared/path.sh`
 - machine-specific PATH entries should be added in `local/private.sh`
+- machine-specific PATH entries should be added in `local/path.sh` when practical, keeping `local/private.sh` focused on helpers and behavior
 - both shared and private PATH changes should use the shared helper contract (`add_to_path`, `append_to_path`) rather than raw `export PATH=...` statements
 - direct `export PATH=...` usage outside the shared helper implementation should be treated as legacy and migrated away where practical
 - the migration should preserve the final effective PATH, but reduce PATH mutation to the fewest files that need to own it
@@ -250,6 +256,7 @@ Example-file expectations:
 
 - add `local/private.example.sh` to document the intended structure for machine-local helpers
 - add `local/secrets.example.sh` to document the expected interface for local secrets loading without committing any secret values
+- add `local/path.example.sh` to document the intended structure for machine-local PATH additions
 - keep example files minimal, explanatory, and safe to commit
 
 ## `system.sh` analysis and simplification suggestions
@@ -638,7 +645,7 @@ Notes:
 - `shared/` contains tracked portable logic
 - prompt and other interactive UX can be shell-specific
 - `local/` documents the machine-local contract, but the real private/secrets files remain untracked
-- the path-specific instruction file should temporarily target both old and new paths during migration if both structures coexist, then drop the legacy path afterward
+- the path-specific instruction file should target the final repo-root shell paths once the legacy layout is removed
 
 ## Migration phases
 
@@ -715,15 +722,15 @@ Notes:
 - [x] create `.github/copilot-instructions.md`
 - [x] create `.github/instructions/shell-config.instructions.md`
 - [x] decide whether to add additional instruction files now or later
-- [ ] update instruction files as the implementation evolves
+- [x] update instruction files as the implementation evolves
 - [x] decide install-script behavior for bash, zsh, or both
 - [x] choose source-vs-symlink bootstrap model
 - [x] design final directory layout
 - [x] define `path.sh` helper contract
 - [x] define `private.sh` contract and example file
 - [x] design `local/private.sh` loading behavior
-- [ ] expand smoke-test coverage across current shell-config files
-- [ ] flatten repo layout and move shell files to the new structure
+- [x] expand smoke-test coverage across current shell-config files
+- [x] flatten repo layout and move shell files to the new structure
 - [x] replace copy-based deployment model
 - [x] add install script for symlink/bootstrap setup
 - [x] simplify `system.sh` to reload/inspect responsibilities

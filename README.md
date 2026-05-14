@@ -1,12 +1,29 @@
 # Utils
 
-This repository contains personal utilities and an in-progress shell configuration rearchitecture.
+This repository contains personal utilities and a repo-driven shell configuration setup.
 
-The shell setup is moving from a copy-based refresh model to a symlinked, repo-driven model with:
+The shell setup uses a symlinked, repo-driven model with:
 
 - **bash and zsh both supported**
 - **zsh as the first-class interactive experience**
 - shared tracked logic separated from local/private and secrets-only configuration
+
+Current shell layout:
+
+```text
+bash/
+  bash_profile
+  bashrc
+zsh/
+  zprofile
+  zshrc
+shared/
+  *.sh
+local/
+  path.example.sh
+  private.example.sh
+  secrets.example.sh
+```
 
 ## Shell setup
 
@@ -34,6 +51,24 @@ The installer currently manages:
 - `~/.zshrc`
 
 It backs up conflicting files and is safe to re-run.
+
+### Shared vs local shell files
+
+- `bash/` and `zsh/` contain the symlink targets for interactive/login startup
+- `shared/` contains tracked shell helpers loaded by both shells where practical, including `shared/path.sh` for tracked PATH rules
+- `local/path.sh` is the optional machine-local PATH layer
+- `local/private.sh` is the optional machine-local hook
+- `local/secrets.sh` is the optional untracked secrets layer
+
+To bootstrap the local files:
+
+```bash
+cp ./local/private.example.sh ./local/private.sh
+cp ./local/path.example.sh ./local/path.sh
+cp ./local/secrets.example.sh ./local/secrets.sh
+```
+
+`bash/bashrc` and `zsh/zshrc` still fall back to `~/bash_utils/private.sh` if it already exists, so older machines can migrate gradually.
 
 ### Daily workflows
 
@@ -107,6 +142,7 @@ That covers:
 
 Use **Terminal: Select Default Profile** and choose the shell you want VS Code terminals to launch.
 
-## More detail
+## Notes
 
-See `shared-configs/bash-config/README.md` for the current shell-config-specific workflow and migration notes.
+- `shell_update` uses the repo path exported by the repo-managed shell entrypoints, so the update flow follows the actual checkout location instead of assuming one hard-coded path.
+- The shell smoke tests cover the shared helpers plus fresh bash/zsh startup from the symlinked entrypoints.

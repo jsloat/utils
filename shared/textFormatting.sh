@@ -21,7 +21,7 @@ _format() {
   local formattedStr=""
   local strToFormat=$1
 
-  for key in "${@:2}"; do # All passed arguments starting at index 2
+  for key in "${@:2}"; do
     formattedStr+="\e[$(_getFormattingCode "$key")m"
   done
 

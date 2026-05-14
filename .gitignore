@@ -1,2 +1,6 @@
 private.sh
+secrets.sh
+/local/private.sh
+/local/path.sh
+/local/secrets.sh
 node_modules

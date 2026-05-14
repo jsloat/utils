@@ -25,6 +25,7 @@ _get_jeeves_response() {
     local full_prompt="Generate a Bash script for Mac based on the following description: $prompt\nRespond only with valid bash code that can be immediately executed. Do not wrap your response in backticks or include any markdown formatting. Only return valid bash code."
     _fetch_gpt_response "$full_prompt"
 }
+
 jeeves() {
     local user_input="$1"
     local generated_code

@@ -1,10 +1,10 @@
 ---
-applyTo: "install.sh,bash/**,zsh/**,shared-configs/bash-config/**"
+applyTo: "install.sh,bash/**,zsh/**,shared/**,local/**"
 ---
 
 # Shell config instructions
 
-- This area is being rearchitected from a copy-based refresh model to a direct-sourcing or symlink-based model.
+- This area uses a direct-sourcing or symlink-based model. Do not reintroduce copy-based bootstrap or refresh flows.
 - **bash and zsh must both work**, but **zsh is the first-class interactive experience**.
 - Keep shared logic shell-agnostic where practical. Prompt, completion, history, and keybinding UX may be shell-specific.
 - Preserve existing behavior unless the feature plan intentionally changes it.

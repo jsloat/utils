@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Configure this to point to the directory containing the utils repo
-UTILS_REPO_PATH="$HOME/Dev/utils"
+UTILS_REPO_PATH=${UTILS_REPO_PATH:-"$HOME/Dev/utils"}
 
 _pull_latest_shell_config() {
   _echoAnnouncement 'Pulling latest settings from GitHub'

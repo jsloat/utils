@@ -75,7 +75,7 @@ gb() {
     local line=${raw_branches_arr[$index]}
     local brName=${line%|*}
     local timestamp=${line#*|}
-    
+
     if [[ $brName != "$currBranch" ]]; then
       local days_ago=$(( (current_timestamp - timestamp) / 86400 ))
       local display_name="$brName (-${days_ago}d)"

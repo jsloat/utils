@@ -22,8 +22,7 @@ require_command shellcheck "Install it with: brew install shellcheck"
 require_command zsh "zsh is required for zsh smoke tests."
 
 TMP_HOME=$(mktemp -d)
-TMP_HOME_LEGACY=$(mktemp -d)
-trap 'rm -rf "$TMP_HOME" "$TMP_HOME_LEGACY"' EXIT
+trap 'rm -rf "$TMP_HOME"' EXIT
 
 cd "$REPO_ROOT"
 
@@ -33,14 +32,15 @@ shellcheck \
   scripts/deploy-shell-config.sh \
   bash/bash_profile \
   bash/bashrc \
-  shared-configs/bash-config/bash_profile.sh \
-  shared-configs/bash-config/bashrc.sh \
-  shared-configs/bash-config/bash_utils/common.sh \
-  shared-configs/bash-config/bash_utils/system.sh \
-  shared-configs/bash-config/bash_utils/textFormatting.sh \
-  shared-configs/bash-config/bash_utils/git.sh \
-  shared-configs/bash-config/bash_utils/macOS.sh \
-  shared-configs/bash-config/bash_utils/gpt.sh
+  shared/common.sh \
+  shared/path.sh \
+  shared/system.sh \
+  shared/textFormatting.sh \
+  shared/git.sh \
+  shared/macOS.sh \
+  shared/gpt.sh \
+  local/private.example.sh \
+  local/secrets.example.sh
 
 log "Checking zsh syntax"
 zsh -n zsh/zprofile zsh/zshrc
@@ -51,12 +51,22 @@ bash ./install.sh --dry-run --shell both >/tmp/utils-shell-install-dry-run.out
 log "Checking shared helper sourcing in bash"
 bash -lc '
   cd "'"$REPO_ROOT"'"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/textFormatting.sh"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/common.sh"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/macOS.sh"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/git.sh"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/system.sh"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/gpt.sh"
+  export UTILS_REPO_PATH="'"$REPO_ROOT"'"
+  source "'"$REPO_ROOT"'/shared/textFormatting.sh"
+  source "'"$REPO_ROOT"'/shared/common.sh"
+  source "'"$REPO_ROOT"'/shared/path.sh"
+  source "'"$REPO_ROOT"'/shared/macOS.sh"
+  source "'"$REPO_ROOT"'/shared/git.sh"
+  source "'"$REPO_ROOT"'/shared/system.sh"
+  source "'"$REPO_ROOT"'/shared/gpt.sh"
+  PATH="/bin:/usr/bin"
+  mkdir -p /tmp/utils-test-path-prepend /tmp/utils-test-path-append
+  add_to_path /tmp/utils-test-path-prepend
+  [[ "$PATH" == "/tmp/utils-test-path-prepend:/bin:/usr/bin" ]]
+  add_to_path /tmp/utils-test-path-prepend
+  [[ "$PATH" == "/tmp/utils-test-path-prepend:/bin:/usr/bin" ]]
+  append_to_path /tmp/utils-test-path-append
+  [[ "$PATH" == "/tmp/utils-test-path-prepend:/bin:/usr/bin:/tmp/utils-test-path-append" ]]
   [[ "$(_getFormattingCode green)" == "32" ]]
   [[ "$(_format hello bold)" == *hello* ]]
   declare -F _has_param >/dev/null
@@ -83,12 +93,22 @@ bash -lc '
 log "Checking shared helper sourcing in zsh"
 zsh -fc '
   cd "'"$REPO_ROOT"'"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/textFormatting.sh"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/common.sh"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/macOS.sh"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/git.sh"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/system.sh"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/gpt.sh"
+  export UTILS_REPO_PATH="'"$REPO_ROOT"'"
+  source "'"$REPO_ROOT"'/shared/textFormatting.sh"
+  source "'"$REPO_ROOT"'/shared/common.sh"
+  source "'"$REPO_ROOT"'/shared/path.sh"
+  source "'"$REPO_ROOT"'/shared/macOS.sh"
+  source "'"$REPO_ROOT"'/shared/git.sh"
+  source "'"$REPO_ROOT"'/shared/system.sh"
+  source "'"$REPO_ROOT"'/shared/gpt.sh"
+  PATH="/bin:/usr/bin"
+  mkdir -p /tmp/utils-test-path-prepend /tmp/utils-test-path-append
+  add_to_path /tmp/utils-test-path-prepend
+  [[ "$PATH" == "/tmp/utils-test-path-prepend:/bin:/usr/bin" ]]
+  add_to_path /tmp/utils-test-path-prepend
+  [[ "$PATH" == "/tmp/utils-test-path-prepend:/bin:/usr/bin" ]]
+  append_to_path /tmp/utils-test-path-append
+  [[ "$PATH" == "/tmp/utils-test-path-prepend:/bin:/usr/bin:/tmp/utils-test-path-append" ]]
   [[ "$(_getFormattingCode green)" == "32" ]]
   [[ "$(_format hello bold)" == *hello* ]]
   whence _has_param >/dev/null
@@ -115,27 +135,11 @@ zsh -fc '
 log "Checking deploy dry-run path without side effects"
 DEPLOY_DRY_RUN=1 npm run deploy >/tmp/utils-shell-deploy-dry-run.out
 
-log "Checking legacy bashrc and bash_profile"
-ln -s "$REPO_ROOT/shared-configs/bash-config/bash_utils" "$TMP_HOME_LEGACY/bash_utils"
-ln -s "$REPO_ROOT/shared-configs/bash-config/bashrc.sh" "$TMP_HOME_LEGACY/.bashrc"
-HOME="$TMP_HOME_LEGACY" bash -lc '
-  cd "'"$REPO_ROOT"'"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bashrc.sh"
-  declare -F _prettify_git_branch >/dev/null
-  declare -F shell_reload >/dev/null
-  declare -F gpt >/dev/null
-  [[ "$PS1" == *"\w"* ]]
-' >/tmp/utils-legacy-bashrc.out 2>/tmp/utils-legacy-bashrc.err
-HOME="$TMP_HOME_LEGACY" bash -lc '
-  cd "'"$REPO_ROOT"'"
-  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_profile.sh"
-  [[ "${BASH_SILENCE_DEPRECATION_WARNING:-}" == "1" ]]
-' >/tmp/utils-legacy-bash-profile.out 2>/tmp/utils-legacy-bash-profile.err
-
 log "Checking fresh bash session startup"
 ln -s "$REPO_ROOT/bash/bash_profile" "$TMP_HOME/.bash_profile"
 ln -s "$REPO_ROOT/bash/bashrc" "$TMP_HOME/.bashrc"
 HOME="$TMP_HOME" bash -ilc '
+  [[ "${UTILS_REPO_PATH:-}" == "'"$REPO_ROOT"'" ]]
   declare -F shell_reload >/dev/null
   declare -F shell_update >/dev/null
   if [[ -f /tmp/utils-current-path-baseline ]]; then
@@ -151,6 +155,7 @@ log "Checking fresh zsh session startup"
 ln -s "$REPO_ROOT/zsh/zprofile" "$TMP_HOME/.zprofile"
 ln -s "$REPO_ROOT/zsh/zshrc" "$TMP_HOME/.zshrc"
 HOME="$TMP_HOME" zsh -ilc '
+  [[ "${UTILS_REPO_PATH:-}" == "'"$REPO_ROOT"'" ]]
   whence shell_reload >/dev/null
   whence shell_update >/dev/null
   if [[ -f /tmp/utils-current-path-baseline ]]; then
