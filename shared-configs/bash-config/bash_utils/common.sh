@@ -121,6 +121,17 @@ _portdetails() {
   lsof -i:"$port"
 }
 
+# Prints PATH one entry per line with indexes so PATH precedence is easier to inspect.
 path() {
-  i=1; IFS=: read -ra p <<< "$PATH"; for x in "${p[@]}"; do printf "%2d  %s\n" "$i" "$x"; ((i++)); done
+  local i=1
+  local old_ifs=$IFS
+  local x
+  IFS=':'
+  # shellcheck disable=SC2086
+  set -- $PATH
+  IFS=$old_ifs
+  for x in "$@"; do
+    printf "%2d  %s\n" "$i" "$x"
+    i=$((i + 1))
+  done
 }

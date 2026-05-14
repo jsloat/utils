@@ -561,6 +561,28 @@ Key migration concerns to document:
 - handle the presence or absence of the local/private and secrets files
 - validate tool availability in a fresh session after setup
 
+### Other-machine migration checklist
+
+Use this checklist when applying the new setup on the other machine:
+
+1. confirm the repo is present at the expected local path
+2. capture the current effective `PATH` for later comparison
+3. record which shell Terminal.app and VS Code are currently configured to launch
+4. back up any existing `~/.bash_profile`, `~/.bashrc`, `~/.zprofile`, and `~/.zshrc`
+5. confirm whether local/private and secrets files already exist and where their contents should live
+6. run `bash ./install.sh --shell both --dry-run`
+7. run `bash ./install.sh --shell both`
+8. open a fresh bash session and a fresh zsh session
+9. run the shell validation flow and compare the final PATH ordering to the captured baseline
+10. verify key user-facing commands still work in fresh sessions
+11. switch Terminal.app and VS Code defaults if desired
+
+### Reusable AI prompt for the other machine
+
+Use a prompt like this in a future session on the other machine:
+
+> Migrate my shell setup in this repo to the current symlink-based workflow. Before changing anything, capture my current PATH and shell defaults, back up existing dotfiles, inspect any local/private and secrets files, run `bash ./install.sh --shell both --dry-run`, then run the real install, open fresh bash and zsh sessions, run `npm run test:shell-config`, and confirm the final PATH ordering matches the original unless the feature plan documents an intentional difference. Do not push or commit anything.
+
 ## Chosen architecture decisions
 
 1. **Additional instruction files**
@@ -688,15 +710,15 @@ Notes:
 - [x] design `local/private.sh` loading behavior
 - [ ] replace copy-based deployment model
 - [x] add install script for symlink/bootstrap setup
-- [ ] simplify `system.sh` to reload/inspect responsibilities
+- [x] simplify `system.sh` to reload/inspect responsibilities
 - [x] add top-level README setup instructions including symlinking
 - [x] update bash-config README
 - [x] add repo-wide and path-specific AI instruction files
 - [ ] remove or generalize migration-specific temporary instruction-file content
-- [ ] add smoke tests for fresh shell startup
+- [x] add smoke tests for fresh shell startup
 - [ ] validate PATH and tool availability in fresh sessions
-- [ ] add bash + zsh support and migration guidance
-- [ ] document and rehearse migration steps for the other machine
+- [x] add bash + zsh support and migration guidance
+- [x] document and rehearse migration steps for the other machine
 
 ## Recommendation
 
