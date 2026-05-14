@@ -270,6 +270,13 @@ Recommended approach:
 
 Current preference from discussion: aim to **support both bash and zsh** so migration to zsh can be gradual and low-risk.
 
+Chosen policy for this implementation:
+
+- bash and zsh must both work
+- zsh is the first-class interactive experience
+- shared helpers should remain shared where practical
+- prompt, completion, history, and other interactive UX can be shell-specific
+
 ### Why zsh is attractive here
 
 On a locked-down macOS work machine, zsh is a strong candidate because it is already installed and commonly supported.
@@ -414,6 +421,10 @@ Recommended structure:
    - use `applyTo` frontmatter to target the shell config area specifically
    - likely target paths under `shared-configs/bash-config/**`
    - use these for more detailed shell-config rules that would be too noisy for the repo-wide instructions
+   - treat `applyTo` as part of the migration work:
+     - during migration, expand it to cover both old and new shell-config paths when both are active
+     - after migration, remove the legacy path and keep only the final stable target paths
+   - also remove migration-specific temporary guidance from the file once the new structure is established
 
 3. **Agent-oriented notes**
    - consider whether an `AGENTS.md` file near the shell config area would be helpful for agent workflows
@@ -432,6 +443,7 @@ Implementation priority:
 - create the instruction files first, before the larger shell rearchitecture work
 - treat them as living guidance and update them as the implementation evolves
 - revise them whenever we make a meaningful architectural decision that future AI sessions should inherit
+- remove or generalize migration-specific temporary guidance from instruction files before considering this feature complete
 
 Additional instruction files to consider if they prove useful:
 
@@ -461,6 +473,63 @@ Key migration concerns to document:
 - verify which shell Terminal and VS Code are configured to launch
 - handle the presence or absence of the local/private and secrets files
 - validate tool availability in a fresh session after setup
+
+## Chosen architecture decisions
+
+1. **Additional instruction files**
+   - defer additional instruction files until real duplication appears
+   - keep only:
+     - `.github/copilot-instructions.md`
+     - `.github/instructions/shell-config.instructions.md`
+   - revisit `feature-plans.instructions.md`, `docs.instructions.md`, or `AGENTS.md` later only if the same durable guidance starts getting repeated across multiple plans, docs, or agent workflows
+
+2. **Install script behavior**
+   - the install script should default to wiring **both** bash and zsh
+   - it may still support `--shell bash|zsh|both`, but `both` should be the default
+
+3. **Bootstrap model**
+   - prefer **symlink-based bootstrap** as the primary model
+   - use tiny stable dotfiles as the symlink targets
+   - avoid copy-based flows entirely
+
+4. **Target directory layout**
+   - flatten the repo structure and remove the unnecessary `shared-configs/bash-config/` nesting
+   - introduce shell-specific entrypoints plus shared and local layers
+
+Proposed target shape:
+
+```text
+README.md
+install.sh
+bash/
+  bash_profile
+  bashrc
+zsh/
+  zprofile
+  zshrc
+shared/
+  env.sh
+  path.sh
+  aliases.sh
+  prompt/
+    bash.sh
+    zsh.sh
+  functions/
+    common.sh
+    git.sh
+    macos.sh
+    shell.sh
+local/
+  private.example.sh
+  secrets.example.sh
+```
+
+Notes:
+
+- `shared/` contains tracked portable logic
+- prompt and other interactive UX can be shell-specific
+- `local/` documents the machine-local contract, but the real private/secrets files remain untracked
+- the path-specific instruction file should temporarily target both old and new paths during migration if both structures coexist, then drop the legacy path afterward
 
 ## Migration phases
 
@@ -493,6 +562,7 @@ Key migration concerns to document:
 - write top-level README setup instructions
 - update bash-config README
 - define repo-wide and path-specific AI instruction files
+- clean up migration-specific temporary instructions that no longer belong in the durable instruction files
 - add migration-safe smoke tests
 - test fresh shell startup behavior
 
@@ -512,18 +582,18 @@ Key migration concerns to document:
 4. Should there be a dedicated `shell-doctor` command from the start, or can documentation carry the load initially?
 5. Do we want minimal smoke tests only, or a small formal test harness?
 6. Do we want to add both `.github/copilot-instructions.md` and a shell-specific `.github/instructions/*.instructions.md` file in the same implementation pass?
-7. Which additional instruction files are worth adding immediately versus only after real duplication appears?
+7. Which additional instruction files are worth adding immediately versus only after real duplication appears? Resolved: defer until duplication appears.
 
 ## Implementation checklist
 
-- [ ] choose target shell strategy
-- [ ] create `.github/copilot-instructions.md`
-- [ ] create `.github/instructions/shell-config.instructions.md`
-- [ ] decide whether to add additional instruction files now or later
+- [x] choose target shell strategy
+- [x] create `.github/copilot-instructions.md`
+- [x] create `.github/instructions/shell-config.instructions.md`
+- [x] decide whether to add additional instruction files now or later
 - [ ] update instruction files as the implementation evolves
-- [ ] decide install-script behavior for bash, zsh, or both
-- [ ] choose source-vs-symlink bootstrap model
-- [ ] design final directory layout
+- [x] decide install-script behavior for bash, zsh, or both
+- [x] choose source-vs-symlink bootstrap model
+- [x] design final directory layout
 - [ ] define `path.sh` helper contract
 - [ ] define `private.sh` contract and example file
 - [ ] design `local/private.sh` loading behavior
@@ -533,6 +603,7 @@ Key migration concerns to document:
 - [ ] add top-level README setup instructions including symlinking
 - [ ] update bash-config README
 - [ ] add repo-wide and path-specific AI instruction files
+- [ ] remove or generalize migration-specific temporary instruction-file content
 - [ ] add smoke tests for fresh shell startup
 - [ ] validate PATH and tool availability in fresh sessions
 - [ ] add bash + zsh support and migration guidance
