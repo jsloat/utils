@@ -1,6 +1,6 @@
 # Repository instructions
 
-- This repository contains personal utilities and configuration, including a shell-config rearchitecture effort under `shared-configs/bash-config/`.
+- This repository contains personal utilities and configuration, including an in-progress shell-config rearchitecture.
 - For shell-config work, **bash and zsh must both work**, but **zsh is the first-class interactive experience**.
 - Preserve existing behavior unless this repository's feature plan explicitly changes it.
 - Preserve **PATH ordering** unless intentionally changing it as part of the design; do not replace PATH with a machine-specific snapshot.

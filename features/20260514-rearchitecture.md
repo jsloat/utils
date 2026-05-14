@@ -148,6 +148,36 @@ add_to_path "/opt/homebrew/bin"
 
 with each entry added only if present and only once.
 
+### Chosen `path.sh` contract
+
+`path.sh` should expose a very small, explicit contract:
+
+1. **`add_to_path DIR`**
+   - prepends `DIR` to `PATH`
+   - no-ops if `DIR` does not exist
+   - no-ops if `DIR` is already present anywhere in `PATH`
+
+2. **`append_to_path DIR`**
+   - appends `DIR` to `PATH`
+   - no-ops if `DIR` does not exist
+   - no-ops if `DIR` is already present anywhere in `PATH`
+
+3. **optional `path_has DIR`**
+   - internal/helper predicate used to keep the implementation readable
+
+Behavior rules:
+
+- preserve the current effective ordering intentionally; do not reorder existing tool precedence accidentally
+- use explicit ordered calls rather than constructing one giant PATH string
+- keep the file idempotent across repeated sourcing
+- keep it shell-safe for both bash and zsh
+- put machine-specific additions in `local/private.sh`, not in tracked shared path logic, unless the tracked rule is guarded by directory existence and is expected across machines
+
+Implementation note:
+
+- use `add_to_path` for high-priority tool directories that should come earlier in lookup order
+- use `append_to_path` only when lower-priority placement is intentional
+
 ## Private / machine-specific strategy
 
 Keep `private.sh` as the single machine-specific escape hatch.
@@ -171,6 +201,56 @@ Recommended directory intent:
 - the actual private layer should live in that local area, e.g. `local/private.sh`
 
 Consider also adding a tracked `local/private.example.sh` to document the expected contract.
+
+### Chosen `private.sh` contract and example-file expectations
+
+`local/private.sh` should be treated as the single machine-local customization entrypoint.
+
+Allowed responsibilities:
+
+- machine-local aliases and helper functions
+- machine-specific PATH additions
+- machine-specific tool locations
+- sourcing a separate untracked secrets file if present
+- machine-local environment variable exports that are not appropriate for shared tracked files
+
+Disallowed responsibilities:
+
+- storing raw secrets directly in tracked files
+- mutating tracked repo files
+- rewriting shell startup files like `~/.bash_profile` or `~/.zshrc`
+- duplicating shared logic that belongs in `shared/`
+
+Loading behavior expectations:
+
+- shared startup should check for `local/private.sh` and source it if present
+- `local/private.sh` may check for and source `local/secrets.sh` if present
+- absence of either file must not produce startup errors
+
+### Chosen `local/private.sh` loading behavior
+
+Load order expectations:
+
+1. shell-specific entrypoint loads shared env/runtime files
+2. shared path helpers become available
+3. tracked shared PATH logic runs
+4. `local/private.sh` is sourced if present
+5. `local/private.sh` may source `local/secrets.sh` if present
+
+PATH mutation rules:
+
+- final PATH ordering must match the current effective PATH ordering unless a change is explicitly documented in the feature plan
+- tracked shared PATH entries should be declared in `shared/path.sh`
+- machine-specific PATH entries should be added in `local/private.sh`
+- both shared and private PATH changes should use the shared helper contract (`add_to_path`, `append_to_path`) rather than raw `export PATH=...` statements
+- direct `export PATH=...` usage outside the shared helper implementation should be treated as legacy and migrated away where practical
+- the migration should preserve the final effective PATH, but reduce PATH mutation to the fewest files that need to own it
+
+Example-file expectations:
+
+- add `local/private.example.sh` to document the intended structure for machine-local helpers
+- add `local/secrets.example.sh` to document the expected interface for local secrets loading without committing any secret values
+- keep example files minimal, explanatory, and safe to commit
 
 ## `system.sh` analysis and simplification suggestions
 
@@ -363,7 +443,7 @@ This migration changes shell initialization and file-loading behavior. Those are
 
 ### Recommended testing level
 
-Add lightweight smoke tests rather than a heavy test suite.
+Add lightweight smoke tests rather than a heavy test suite, and add them early enough to capture a baseline before major refactors begin.
 
 Candidate checks:
 
@@ -371,10 +451,17 @@ Candidate checks:
 2. confirm expected core functions and aliases exist
 3. confirm optional `private.sh` absence does not break startup
 4. confirm `path.sh` adds key directories exactly once
-5. confirm `tdk`-style tools remain available in new terminal sessions when their directories exist
-6. confirm bootstrap/symlink setup is idempotent
-7. if zsh support is introduced, run the same smoke checks there
-8. verify the install script creates expected symlinks and remains idempotent for bash, zsh, and dual-shell modes
+5. confirm the final PATH order matches the current effective PATH order exactly, unless an intentional change is documented in the feature plan
+6. confirm `tdk`-style tools remain available in new terminal sessions when their directories exist
+7. confirm bootstrap/symlink setup is idempotent
+8. if zsh support is introduced, run the same smoke checks there
+9. verify the install script creates expected symlinks and remains idempotent for bash, zsh, and dual-shell modes
+
+Execution guidance:
+
+- write the smoke tests before major movement of shared helpers into new files
+- run them against the pre-refactor setup to capture a behavioral baseline for important commands
+- re-run them after each major migration step
 
 ### Suggested implementation options
 
@@ -549,6 +636,7 @@ Notes:
 - add install script that creates or repairs bash/zsh symlinks
 - replace copy-based refresh with direct sourcing or symlinks
 - add a minimal shell doctor / reload workflow
+- add baseline smoke tests before larger helper/file movement begins
 
 ### Phase 3: module cleanup
 
@@ -594,15 +682,15 @@ Notes:
 - [x] decide install-script behavior for bash, zsh, or both
 - [x] choose source-vs-symlink bootstrap model
 - [x] design final directory layout
-- [ ] define `path.sh` helper contract
-- [ ] define `private.sh` contract and example file
-- [ ] design `local/private.sh` loading behavior
+- [x] define `path.sh` helper contract
+- [x] define `private.sh` contract and example file
+- [x] design `local/private.sh` loading behavior
 - [ ] replace copy-based deployment model
-- [ ] add install script for symlink/bootstrap setup
+- [x] add install script for symlink/bootstrap setup
 - [ ] simplify `system.sh` to reload/inspect responsibilities
 - [ ] add top-level README setup instructions including symlinking
 - [ ] update bash-config README
-- [ ] add repo-wide and path-specific AI instruction files
+- [x] add repo-wide and path-specific AI instruction files
 - [ ] remove or generalize migration-specific temporary instruction-file content
 - [ ] add smoke tests for fresh shell startup
 - [ ] validate PATH and tool availability in fresh sessions

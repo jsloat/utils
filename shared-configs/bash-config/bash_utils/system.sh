@@ -2,55 +2,61 @@
 
 # Configure this to point to the directory containing the utils repo
 UTILS_REPO_PATH="$HOME/Dev/utils"
-BASH_CONFIG_REPO_DIR="$UTILS_REPO_PATH/shared-configs/bash-config"
 
-_pullLatestBashSettings() {
+_pull_latest_shell_config() {
   _echoAnnouncement 'Pulling latest settings from GitHub'
   local INIT_DIR
   INIT_DIR=$(pwd)
   cd "$UTILS_REPO_PATH" || exit
-  git checkout master
-  git pull
+  git pull --ff-only
   cd "$INIT_DIR" || exit
 }
 
-_makeFileIfMissing() {
-  local filePath=$1
-  # file | folder
-  local fileType=$2
-  if test ! -e "$filePath"; then
-    case $fileType in
-    file) touch "$filePath" ;;
-    folder) mkdir "$filePath" ;;
-    esac
+_reload_current_shell() {
+  if [[ -n ${ZSH_VERSION:-} ]]; then
+    _echoAnnouncement 'Reloading zsh session'
+    # shellcheck disable=SC1090
+    source "$HOME/.zshrc"
+  else
+    _echoAnnouncement 'Reloading bash session'
+    # shellcheck disable=SC1090
+    source "$HOME/.bashrc"
   fi
 }
 
-# NB: This will overwrite files in the root directory
-_overwriteBashSettings() {
-  _echoAnnouncement 'Copying files'
-  _makeFileIfMissing "$HOME"/bash_utils folder
-  cp -Rf "$BASH_CONFIG_REPO_DIR"/bash_utils/ "$HOME"/bash_utils
-  _makeFileIfMissing "$HOME"/.bashrc file
-  cp -f "$BASH_CONFIG_REPO_DIR"/bashrc.sh "$HOME"/.bashrc
-  _makeFileIfMissing "$HOME"/.bash_profile file
-  cp -f "$BASH_CONFIG_REPO_DIR"/bash_profile.sh "$HOME"/.bash_profile
+# shellcheck disable=2139
+alias settings="code $UTILS_REPO_PATH"
+
+shell_reload() {
+  _reload_current_shell
 }
 
-# shellcheck disable=2139
-alias settings="_pullLatestBashSettings;code $UTILS_REPO_PATH"
-alias reload="_echoAnnouncement 'Please use reload_session instead'"
-# shellcheck disable=2139
-alias reload_session="_echoAnnouncement 'Reloading terminal session';source $HOME/.bashrc"
+shell_update() {
+  local shell_target="both"
+  if ! _has_param "--local" "$@"; then
+    _pull_latest_shell_config
+  fi
+  bash "$UTILS_REPO_PATH/install.sh" --shell "$shell_target"
+  _reload_current_shell
+  _echoAnnouncement "Done"
+}
+
+reload() {
+  _echoAnnouncement "Use 'shell_reload' instead."
+  shell_reload
+}
+
+reload_session() {
+  _echoAnnouncement "Use 'shell_reload' instead."
+  shell_reload
+}
 
 # Use flag --local to skip pulling latest from master
 refresh() {
-  if [[ $1 == 'local' ]]; then
+  if [[ ${1:-} == 'local' ]]; then
     echo "Use --local flag instead"
     return 1
   fi
-  if ! _has_param "--local" "$@"; then _pullLatestBashSettings; fi
-  _overwriteBashSettings
-  reload_session
-  _echoAnnouncement "Done"
+  _echoAnnouncement "Use 'shell_update' instead."
+  shell_update "$@"
 }

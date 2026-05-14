@@ -1,5 +1,5 @@
 ---
-applyTo: "shared-configs/bash-config/**"
+applyTo: "install.sh,bash/**,zsh/**,shared-configs/bash-config/**"
 ---
 
 # Shell config instructions

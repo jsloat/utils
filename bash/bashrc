@@ -1,0 +1,45 @@
+#!/bin/bash
+# shellcheck disable=1090,1091
+
+_shell_config_repo_root() {
+  local src="${BASH_SOURCE[0]}"
+  while [ -L "$src" ]; do
+    local dir
+    dir=$(cd -P "$(dirname "$src")" && pwd)
+    src=$(readlink "$src")
+    if [[ $src != /* ]]; then
+      src="$dir/$src"
+    fi
+  done
+  cd -P "$(dirname "$src")/.." && pwd
+}
+
+__shell_config_root="$(_shell_config_repo_root)"
+__legacy_config_root="$__shell_config_root/shared-configs/bash-config"
+
+# Optional private source import for sensitive things.
+if test -e "$__shell_config_root/local/private.sh"; then
+  source "$__shell_config_root/local/private.sh"
+elif test -e "$HOME"/bash_utils/private.sh; then
+  source "$HOME"/bash_utils/private.sh
+fi
+
+source "$__legacy_config_root"/bash_utils/textFormatting.sh
+source "$__legacy_config_root"/bash_utils/common.sh
+source "$__legacy_config_root"/bash_utils/macOS.sh
+source "$__legacy_config_root"/bash_utils/git.sh
+source "$__legacy_config_root"/bash_utils/system.sh
+source "$__legacy_config_root"/bash_utils/gpt.sh
+
+_prettify_git_branch() {
+  git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ [\1]/'
+}
+
+# Customizes the terminal prompt to show curr directory & git repo/branch (if any).
+export PS1="\n\[\033[32m\]\w\n\$(_prettify_git_branch)\[\033[00m\]: "
+
+export PATH="/usr/local/bin:$PATH"
+
+unset -f _shell_config_repo_root
+unset __shell_config_root
+unset __legacy_config_root
