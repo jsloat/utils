@@ -653,6 +653,7 @@ Notes:
 - clean up migration-specific temporary instructions that no longer belong in the durable instruction files
 - add migration-safe smoke tests
 - test fresh shell startup behavior
+- ensure `package.json` shell scripts stay aligned with moved file paths and are checked without performing git pushes or real installs
 
 ### Phase 5: dual-shell support and optional migration
 

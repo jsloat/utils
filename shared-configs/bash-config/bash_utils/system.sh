@@ -15,11 +15,11 @@ _pull_latest_shell_config() {
 _reload_current_shell() {
   if [[ -n ${ZSH_VERSION:-} ]]; then
     _echoAnnouncement 'Reloading zsh session'
-    # shellcheck disable=SC1090
+    # shellcheck disable=SC1090,SC1091
     source "$HOME/.zshrc"
   else
     _echoAnnouncement 'Reloading bash session'
-    # shellcheck disable=SC1090
+    # shellcheck disable=SC1090,SC1091
     source "$HOME/.bashrc"
   fi
 }
@@ -33,10 +33,18 @@ shell_reload() {
 
 shell_update() {
   local shell_target="both"
+  local install_args=(--shell "$shell_target")
   if ! _has_param "--local" "$@"; then
     _pull_latest_shell_config
   fi
-  bash "$UTILS_REPO_PATH/install.sh" --shell "$shell_target"
+  if _has_param "--dry-run" "$@"; then
+    install_args+=(--dry-run)
+  fi
+  bash "$UTILS_REPO_PATH/install.sh" "${install_args[@]}"
+  if _has_param "--dry-run" "$@"; then
+    _echoAnnouncement "Dry run only: shell was not reloaded."
+    return 0
+  fi
   _reload_current_shell
   _echoAnnouncement "Done"
 }

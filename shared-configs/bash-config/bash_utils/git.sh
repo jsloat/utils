@@ -190,4 +190,4 @@ alias freshen='git pull --rebase origin $MAIN_BRANCH_NAME'
 alias amend='git add .;git commit --amend'
 alias lastcommit='git log -1 --pretty=%B | cat'
 # Show LOC change stats for current branch compared to main branch.
-alias loc="git fetch &> /dev/null;git diff --shortstat origin/$MAIN_BRANCH_NAME"
+alias loc='git fetch &> /dev/null;git diff --shortstat origin/$MAIN_BRANCH_NAME'
