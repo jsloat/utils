@@ -660,14 +660,28 @@ Notes:
 - add a minimal shell doctor / reload workflow
 - add baseline smoke tests before larger helper/file movement begins
 
-### Phase 3: module cleanup
+### Phase 3: flatten layout and move files
+
+- expand smoke-test coverage so each current shell-config file has at least one contract in the test suite
+- move shell entrypoints into the repo-root `bash/` and `zsh/` directories
+- move shared tracked logic into repo-root `shared/`
+- create repo-root `local/` example files for the private/secrets contract
+- move or replace legacy files under `shared-configs/bash-config/`
+- update all sourcing paths as files move
+- update `package.json` scripts, smoke tests, and installer targets as files move
+- when moving a file, confirm the smoke suite still covers any important user-facing functions that file owns; add or adjust tests before considering the move complete
+- ensure there is at least one smoke-tested contract covering each current shell-config file before the legacy layout is fully retired
+- expand instruction-file `applyTo` globs while both old and new paths coexist
+- re-run smoke tests after each significant move so breakage is caught incrementally
+
+### Phase 4: module cleanup
 
 - split or rename files by clear responsibility
 - simplify `system.sh`
 - move PATH logic into `path.sh`
 - keep existing git helpers unchanged unless required by the migration
 
-### Phase 4: documentation and smoke tests
+### Phase 5: documentation and smoke tests
 
 - write top-level README setup instructions
 - update bash-config README
@@ -677,7 +691,7 @@ Notes:
 - test fresh shell startup behavior
 - ensure `package.json` shell scripts stay aligned with moved file paths and are checked without performing git pushes or real installs
 
-### Phase 5: dual-shell support and optional migration
+### Phase 6: dual-shell support and optional migration
 
 - add zsh wrappers while preserving bash support
 - document how to switch Terminal to zsh and back
@@ -708,7 +722,9 @@ Notes:
 - [x] define `path.sh` helper contract
 - [x] define `private.sh` contract and example file
 - [x] design `local/private.sh` loading behavior
-- [ ] replace copy-based deployment model
+- [ ] expand smoke-test coverage across current shell-config files
+- [ ] flatten repo layout and move shell files to the new structure
+- [x] replace copy-based deployment model
 - [x] add install script for symlink/bootstrap setup
 - [x] simplify `system.sh` to reload/inspect responsibilities
 - [x] add top-level README setup instructions including symlinking
@@ -716,7 +732,7 @@ Notes:
 - [x] add repo-wide and path-specific AI instruction files
 - [ ] remove or generalize migration-specific temporary instruction-file content
 - [x] add smoke tests for fresh shell startup
-- [ ] validate PATH and tool availability in fresh sessions
+- [x] validate PATH and tool availability in fresh sessions
 - [x] add bash + zsh support and migration guidance
 - [x] document and rehearse migration steps for the other machine
 

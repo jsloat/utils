@@ -22,7 +22,8 @@ require_command shellcheck "Install it with: brew install shellcheck"
 require_command zsh "zsh is required for zsh smoke tests."
 
 TMP_HOME=$(mktemp -d)
-trap 'rm -rf "$TMP_HOME"' EXIT
+TMP_HOME_LEGACY=$(mktemp -d)
+trap 'rm -rf "$TMP_HOME" "$TMP_HOME_LEGACY"' EXIT
 
 cd "$REPO_ROOT"
 
@@ -52,15 +53,27 @@ bash -lc '
   cd "'"$REPO_ROOT"'"
   source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/textFormatting.sh"
   source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/common.sh"
+  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/macOS.sh"
   source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/git.sh"
   source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/system.sh"
+  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/gpt.sh"
+  [[ "$(_getFormattingCode green)" == "32" ]]
+  [[ "$(_format hello bold)" == *hello* ]]
   declare -F _has_param >/dev/null
   _has_param foo bar foo
   ! _has_param foo bar baz
+  declare -F is_terminal >/dev/null
+  TERM_PROGRAM=Apple_Terminal
+  is_terminal
+  TERM_PROGRAM=vscode
+  declare -F is_vscode >/dev/null
+  is_vscode
   declare -F getBranchName >/dev/null
   test -n "$(getBranchName)"
   declare -F shell_reload >/dev/null
   declare -F shell_update >/dev/null
+  declare -F gpt >/dev/null
+  declare -F jeeves >/dev/null
   shell_update --local --dry-run >/tmp/utils-shell-update-dry-run-bash.out
   alias freshen >/dev/null
   alias loc >/dev/null
@@ -72,15 +85,27 @@ zsh -fc '
   cd "'"$REPO_ROOT"'"
   source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/textFormatting.sh"
   source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/common.sh"
+  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/macOS.sh"
   source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/git.sh"
   source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/system.sh"
+  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_utils/gpt.sh"
+  [[ "$(_getFormattingCode green)" == "32" ]]
+  [[ "$(_format hello bold)" == *hello* ]]
   whence _has_param >/dev/null
   _has_param foo bar foo
   ! _has_param foo bar baz
+  whence is_terminal >/dev/null
+  TERM_PROGRAM=Apple_Terminal
+  is_terminal
+  TERM_PROGRAM=vscode
+  whence is_vscode >/dev/null
+  is_vscode
   whence getBranchName >/dev/null
   [[ -n "$(getBranchName)" ]]
   whence shell_reload >/dev/null
   whence shell_update >/dev/null
+  whence gpt >/dev/null
+  whence jeeves >/dev/null
   shell_update --local --dry-run >/tmp/utils-shell-update-dry-run-zsh.out
   alias freshen >/dev/null
   alias loc >/dev/null
@@ -90,12 +115,36 @@ zsh -fc '
 log "Checking deploy dry-run path without side effects"
 DEPLOY_DRY_RUN=1 npm run deploy >/tmp/utils-shell-deploy-dry-run.out
 
+log "Checking legacy bashrc and bash_profile"
+ln -s "$REPO_ROOT/shared-configs/bash-config/bash_utils" "$TMP_HOME_LEGACY/bash_utils"
+ln -s "$REPO_ROOT/shared-configs/bash-config/bashrc.sh" "$TMP_HOME_LEGACY/.bashrc"
+HOME="$TMP_HOME_LEGACY" bash -lc '
+  cd "'"$REPO_ROOT"'"
+  source "'"$REPO_ROOT"'/shared-configs/bash-config/bashrc.sh"
+  declare -F _prettify_git_branch >/dev/null
+  declare -F shell_reload >/dev/null
+  declare -F gpt >/dev/null
+  [[ "$PS1" == *"\w"* ]]
+' >/tmp/utils-legacy-bashrc.out 2>/tmp/utils-legacy-bashrc.err
+HOME="$TMP_HOME_LEGACY" bash -lc '
+  cd "'"$REPO_ROOT"'"
+  source "'"$REPO_ROOT"'/shared-configs/bash-config/bash_profile.sh"
+  [[ "${BASH_SILENCE_DEPRECATION_WARNING:-}" == "1" ]]
+' >/tmp/utils-legacy-bash-profile.out 2>/tmp/utils-legacy-bash-profile.err
+
 log "Checking fresh bash session startup"
 ln -s "$REPO_ROOT/bash/bash_profile" "$TMP_HOME/.bash_profile"
 ln -s "$REPO_ROOT/bash/bashrc" "$TMP_HOME/.bashrc"
 HOME="$TMP_HOME" bash -ilc '
   declare -F shell_reload >/dev/null
   declare -F shell_update >/dev/null
+  if [[ -f /tmp/utils-current-path-baseline ]]; then
+    current_path=$(cat /tmp/utils-current-path-baseline)
+    [[ "$PATH" == "$current_path" ]]
+  fi
+  if [[ -f /tmp/utils-tdk-status ]] && [[ $(cat /tmp/utils-tdk-status) == "tdk-present" ]]; then
+    command -v tdk >/dev/null
+  fi
 ' >/tmp/utils-bash-fresh.out 2>/tmp/utils-bash-fresh.err
 
 log "Checking fresh zsh session startup"
@@ -104,6 +153,13 @@ ln -s "$REPO_ROOT/zsh/zshrc" "$TMP_HOME/.zshrc"
 HOME="$TMP_HOME" zsh -ilc '
   whence shell_reload >/dev/null
   whence shell_update >/dev/null
+  if [[ -f /tmp/utils-current-path-baseline ]]; then
+    current_path=$(cat /tmp/utils-current-path-baseline)
+    [[ "$PATH" == "$current_path" ]]
+  fi
+  if [[ -f /tmp/utils-tdk-status ]] && [[ $(cat /tmp/utils-tdk-status) == "tdk-present" ]]; then
+    command -v tdk >/dev/null
+  fi
 ' >/tmp/utils-zsh-fresh.out 2>/tmp/utils-zsh-fresh.err
 
 log "Shell smoke tests passed"
