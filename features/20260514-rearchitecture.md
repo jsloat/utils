@@ -689,8 +689,8 @@ Notes:
 - [ ] replace copy-based deployment model
 - [x] add install script for symlink/bootstrap setup
 - [ ] simplify `system.sh` to reload/inspect responsibilities
-- [ ] add top-level README setup instructions including symlinking
-- [ ] update bash-config README
+- [x] add top-level README setup instructions including symlinking
+- [x] update bash-config README
 - [x] add repo-wide and path-specific AI instruction files
 - [ ] remove or generalize migration-specific temporary instruction-file content
 - [ ] add smoke tests for fresh shell startup
