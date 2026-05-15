@@ -5,6 +5,20 @@ ZSH_PLUGIN_FILE="$UTILS_REPO_PATH/zsh/plugins.txt"
 ANTIDOTE_DIR="$HOME/.antidote"
 HALP_FILE="$UTILS_REPO_PATH/shared/halp.txt"
 LOCAL_HALP_FILE="$UTILS_REPO_PATH/local/halp.txt"
+FONT_DIRS_DEFAULT="$HOME/Library/Fonts:/Library/Fonts"
+
+_has_recommended_nerd_font() {
+  local font_dirs dir
+  font_dirs=${SHELL_CONFIG_FONT_DIRS:-$FONT_DIRS_DEFAULT}
+
+  while IFS= read -r dir; do
+    if [[ -d "$dir" ]] && find "$dir" -maxdepth 1 -type f \( -iname 'MesloLG*NF*.ttf' -o -iname 'MesloLG*NerdFont*.ttf' \) | grep -q .; then
+      return 0
+    fi
+  done <<<"$(printf '%s\n' "$font_dirs" | tr ':' '\n')"
+
+  return 1
+}
 
 _pull_latest_shell_config() {
   _echoAnnouncement 'Pulling latest settings from GitHub'
@@ -115,6 +129,24 @@ zsh_plugins_update() {
   else
     _echoAnnouncement "Done. Reload zsh to pick up plugin changes."
   fi
+}
+
+shell_install_font() {
+  if _has_recommended_nerd_font; then
+    _echoAnnouncement "MesloLGS NF already appears to be installed."
+    _echoAnnouncement "Set Terminal.app > Settings > Profiles > Text > Font to MesloLGS NF if the prompt arrows still look wrong."
+    return 0
+  fi
+
+  if ! command -v brew >/dev/null 2>&1; then
+    _echoError "Homebrew is required to install MesloLGS NF automatically."
+    _echoAnnouncement "Install it manually, then set Terminal.app > Settings > Profiles > Text > Font to MesloLGS NF."
+    return 1
+  fi
+
+  _echoAnnouncement "Installing MesloLGS NF with Homebrew"
+  brew install --cask font-meslo-lg-nerd-font
+  _echoAnnouncement "Now set Terminal.app > Settings > Profiles > Text > Font to MesloLGS NF."
 }
 
 reload() {

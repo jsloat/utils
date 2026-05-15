@@ -1,5 +1,6 @@
 shell_update|Pull latest repo changes and reload shell
 shell_reload|Reload the current shell session only
+shell_install_font|Install MesloLGS NF for the zsh prompt
 settings|Open the utils repo
 zsh_plugins_edit|Open the repo-owned zsh plugin list
 zsh_plugins_update|Update antidote-managed zsh plugins

@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "deploy": "bash ./scripts/deploy-shell-config.sh",
     "test:shell-config": "bash ./scripts/test-shell-config.sh"
   },
   "repository": {

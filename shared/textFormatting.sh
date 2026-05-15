@@ -20,9 +20,10 @@ _getFormattingCode() {
 _format() {
   local formattedStr=""
   local strToFormat=$1
+  local format_rule
 
-  for key in "${@:2}"; do
-    formattedStr+="\e[$(_getFormattingCode "$key")m"
+  for format_rule in "${@:2}"; do
+    formattedStr+="\e[$(_getFormattingCode "$format_rule")m"
   done
 
   formattedStr+="$strToFormat"

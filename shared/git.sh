@@ -20,8 +20,9 @@ getBranchName() {
 getJiraKey() {
   local branchName=$1
   local REGEX_ISSUE_ID="^[A-Z][A-Z\d]{1,}-\d+"
-  key=$(getBranchName | grep -o -E "$REGEX_ISSUE_ID")
-  echo "$key"
+  local jira_key
+  jira_key=$(getBranchName | grep -o -E "$REGEX_ISSUE_ID")
+  echo "$jira_key"
 }
 
 pushup() {

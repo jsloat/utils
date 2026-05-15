@@ -2,3 +2,5 @@ zsh-users/zsh-autosuggestions
 # fzf-tab requires the fzf binary (`brew install fzf`) for the richer tab UI.
 Aloxaf/fzf-tab
 zsh-users/zsh-syntax-highlighting
+# Keep this after zsh-syntax-highlighting; zshrc binds its widgets after antidote load.
+zsh-users/zsh-history-substring-search

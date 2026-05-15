@@ -29,7 +29,6 @@ cd "$REPO_ROOT"
 log "Running ShellCheck"
 shellcheck \
   install.sh \
-  scripts/deploy-shell-config.sh \
   bash/bash_profile \
   bash/bashrc \
   shared/common.sh \
@@ -47,12 +46,16 @@ log "Checking zsh syntax"
 zsh -n zsh/zprofile zsh/zshrc
 
 log "Checking installer dry-run"
-bash ./install.sh --dry-run --shell both >/tmp/utils-shell-install-dry-run.out
+SHELL_CONFIG_FONT_DIRS="$TMP_HOME/fonts" HOME="$TMP_HOME" bash ./install.sh --dry-run --shell both >/tmp/utils-shell-install-dry-run.out
+grep -q "Creating .*\\.hushlogin" /tmp/utils-shell-install-dry-run.out
+grep -q "the zsh prompt uses Nerd Font glyphs" /tmp/utils-shell-install-dry-run.out
 
 log "Checking zsh plugin bootstrap dry-run"
-PATH="/usr/bin:/bin" HOME="$TMP_HOME" bash ./install.sh --dry-run --shell zsh >/tmp/utils-shell-install-zsh-dry-run.out
+PATH="/usr/bin:/bin" SHELL_CONFIG_FONT_DIRS="$TMP_HOME/fonts" HOME="$TMP_HOME" bash ./install.sh --dry-run --shell zsh >/tmp/utils-shell-install-zsh-dry-run.out
 grep -q "Installing antidote" /tmp/utils-shell-install-zsh-dry-run.out
+grep -q "Creating .*\\.hushlogin" /tmp/utils-shell-install-zsh-dry-run.out
 grep -q "fzf is not installed" /tmp/utils-shell-install-zsh-dry-run.out
+grep -q "Then set Terminal.app > Settings > Profiles > Text > Font to MesloLGS NF." /tmp/utils-shell-install-zsh-dry-run.out
 
 log "Checking shared helper sourcing in bash"
 bash -lc '
@@ -90,6 +93,7 @@ bash -lc '
   test -n "$(getBranchName)"
   declare -F shell_reload >/dev/null
   declare -F shell_update >/dev/null
+  declare -F shell_install_font >/dev/null
   declare -F halp >/dev/null
   declare -F gcm >/dev/null
   declare -F zsh_plugins_edit >/dev/null
@@ -117,6 +121,18 @@ bash -lc '
   [[ "$(getBranchName)" == "feature/gb-smoke" ]]
   gcm >/tmp/utils-gcm-bash.out
   [[ "$(getBranchName)" == "main" ]]
+  single_branch_repo=$(mktemp -d)
+  cd "$single_branch_repo"
+  git init -q
+  git config user.email test@example.com
+  git config user.name "Test User"
+  git branch -m main
+  touch only-main.txt
+  git add only-main.txt
+  git commit -qm init
+  gb >/tmp/utils-gb-single-bash.out
+  grep -q "No branches found" /tmp/utils-gb-single-bash.out
+  rm -rf "$single_branch_repo"
   rm -rf "$tmp_repo"
   cd "'"$REPO_ROOT"'"
   halp | grep -q "shell_update"
@@ -163,6 +179,7 @@ zsh -fc '
   [[ -n "$(getBranchName)" ]]
   whence shell_reload >/dev/null
   whence shell_update >/dev/null
+  whence shell_install_font >/dev/null
   whence halp >/dev/null
   whence gcm >/dev/null
   whence zsh_plugins_edit >/dev/null
@@ -190,6 +207,18 @@ zsh -fc '
   [[ "$(getBranchName)" == "feature/gb-smoke" ]]
   gcm >/tmp/utils-gcm-zsh.out
   [[ "$(getBranchName)" == "main" ]]
+  single_branch_repo=$(mktemp -d)
+  cd "$single_branch_repo"
+  git init -q
+  git config user.email test@example.com
+  git config user.name "Test User"
+  git branch -m main
+  touch only-main.txt
+  git add only-main.txt
+  git commit -qm init
+  gb >/tmp/utils-gb-single-zsh.out
+  grep -q "No branches found" /tmp/utils-gb-single-zsh.out
+  rm -rf "$single_branch_repo"
   rm -rf "$tmp_repo"
   cd "'"$REPO_ROOT"'"
   halp | grep -q "shell_update"
@@ -199,9 +228,6 @@ zsh -fc '
   whence loc >/dev/null
   path | head -1 | grep -Eq "^[[:space:]]*[0-9]+[[:space:]]+/"
 '
-
-log "Checking deploy dry-run path without side effects"
-DEPLOY_DRY_RUN=1 npm run deploy >/tmp/utils-shell-deploy-dry-run.out
 
 log "Checking legacy private file has been retired"
 test ! -e "$REPO_ROOT/shared-configs/bash-config/bash_utils/private.sh"
@@ -213,6 +239,7 @@ HOME="$TMP_HOME" bash -ilc '
   [[ "${UTILS_REPO_PATH:-}" == "'"$REPO_ROOT"'" ]]
   declare -F shell_reload >/dev/null
   declare -F shell_update >/dev/null
+  declare -F shell_install_font >/dev/null
   declare -F halp >/dev/null
   declare -F define_lazy_function >/dev/null
   declare -F zsh_plugins_edit >/dev/null
@@ -239,6 +266,10 @@ cat <<'EOF' >"$TMP_HOME/.antidote/antidote.zsh"
 antidote() {
   if [[ $1 == load ]]; then
     typeset -g ANTIDOTE_LOADED_FROM="$2"
+    history-substring-search-up() { zle up-line-or-beginning-search; }
+    history-substring-search-down() { zle down-line-or-beginning-search; }
+    zle -N history-substring-search-up
+    zle -N history-substring-search-down
   fi
 }
 EOF
@@ -248,23 +279,32 @@ HOME="$TMP_HOME" zsh -ilc '
   [[ "${UTILS_REPO_PATH:-}" == "'"$REPO_ROOT"'" ]]
   whence shell_reload >/dev/null
   whence shell_update >/dev/null
+  whence shell_install_font >/dev/null
   whence halp >/dev/null
   whence define_lazy_function >/dev/null
   whence zsh_plugins_edit >/dev/null
   whence zsh_plugins_update >/dev/null
   whence compdef >/dev/null
   whence vcs_info >/dev/null
-  whence _update_vcs_prompt >/dev/null
-  _update_vcs_prompt
+  whence _update_shell_prompt >/dev/null
+  _update_shell_prompt
+  source "$HOME/.zshrc"
   setopt | grep -qx "automenu"
   setopt | grep -qx "completeinword"
   setopt | grep -qx "promptsubst"
-  bindkey "^[[A" | grep -q "up-line-or-beginning-search"
-  bindkey "^[[B" | grep -q "down-line-or-beginning-search"
-  bindkey "^[OA" | grep -q "up-line-or-beginning-search"
-  bindkey "^[OB" | grep -q "down-line-or-beginning-search"
-  [[ "$PROMPT" == *\${__shell_branch_prompt}* ]]
-  [[ "${__shell_branch_prompt:-}" == *">"* ]]
+  [[ -n "${HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE:-}" ]]
+  bindkey "^[[A" | grep -q "history-substring-search-up"
+  bindkey "^[[B" | grep -q "history-substring-search-down"
+  bindkey "^[OA" | grep -q "history-substring-search-up"
+  bindkey "^[OB" | grep -q "history-substring-search-down"
+  COLUMNS=12
+  _update_shell_prompt
+  visible_prompt_width=$((${#__shell_prompt_path_text} + ${#__shell_prompt_branch_text} + (SHELL_PROMPT_SEGMENT_PADDING * 4) + 2))
+  (( visible_prompt_width <= COLUMNS ))
+  [[ "$PROMPT" == *\${__shell_prompt_segments}* ]]
+  [[ "$PROMPT" == $'\n'* ]]
+  [[ "$PROMPT" == *$'\n'*$'\n'* ]]
+  [[ "${__shell_prompt_segments:-}" == *""* ]]
   [[ "${ANTIDOTE_LOADED_FROM:-}" == "'"$REPO_ROOT"'/zsh/plugins.txt" ]]
   if [[ -f "'"$REPO_ROOT"'/local/private.sh" ]]; then
     whence go >/dev/null

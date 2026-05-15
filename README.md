@@ -50,13 +50,16 @@ The installer currently manages:
 
 - `~/.bash_profile`
 - `~/.bashrc`
+- `~/.hushlogin`
 - `~/.zprofile`
 - `~/.zshrc`
 
 It backs up conflicting files and is safe to re-run.
+It also creates `~/.hushlogin` so new login shells do not print the macOS `Last login: ...` banner.
 
 For zsh, it also bootstraps the **antidote** plugin manager into `~/.antidote` if needed.
 If `fzf` is missing, the installer warns because `fzf-tab` is configured in `zsh/plugins.txt` and its richer completion UI depends on `fzf`.
+If the recommended Nerd Font is missing, the installer warns and points you to the MesloLGS NF install command plus the Terminal.app font setting.
 
 ### Shared vs local shell files
 
@@ -86,6 +89,7 @@ After your shell config is loaded:
 
 ```bash
 shell_update
+shell_install_font
 ```
 
 This:
@@ -109,6 +113,7 @@ zsh_plugins_update
 - `zsh_plugins_edit` opens `zsh/plugins.txt`
 - `zsh_plugins_update` runs `antidote update` and reloads zsh when run from zsh
 - if `fzf-tab` is enabled, install `fzf` with `brew install fzf` so tab completion gets the full interactive UI instead of degraded fallback behavior
+- some plugins also need repo-owned post-load config in `zsh/zshrc`; for example, `zsh-history-substring-search` only starts handling arrow keys after its widgets are bound there
 
 For shell-management help:
 
@@ -119,21 +124,17 @@ halp
 - `halp` prints one command per line from `shared/halp.txt`
 - optional machine-local additions can live in `local/halp.txt`
 
-### Deploy helper
+### Prompt font
 
-From the repo root:
+The zsh prompt uses powerline-style glyphs, so it looks best with **MesloLGS NF**.
 
-```bash
-npm run deploy
-```
-
-That command pushes to git, then runs the local shell update flow.
-
-For a no-side-effects check:
+Install it with:
 
 ```bash
-DEPLOY_DRY_RUN=1 npm run deploy
+shell_install_font
 ```
+
+Then select it in **Terminal.app > Settings > Profiles > Text > Font**.
 
 ## Validation
 
@@ -176,3 +177,4 @@ Use **Terminal: Select Default Profile** and choose the shell you want VS Code t
 - `shell_update` uses the repo path exported by the repo-managed shell entrypoints, so the update flow follows the actual checkout location instead of assuming one hard-coded path.
 - The shell smoke tests cover the shared helpers plus fresh bash/zsh startup from the symlinked entrypoints.
 - The current zsh plugin layer is repo-owned config with antidote-managed installs. Plugin code itself is not vendored into this repo.
+- The zsh prompt uses a powerline-style path/branch segment, so the arrow separator looks best in a Nerd Font or other Powerline-compatible font.

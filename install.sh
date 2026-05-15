@@ -9,10 +9,57 @@ FORCE=false
 TARGET_SHELL="$DEFAULT_SHELL"
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
 ANTIDOTE_DIR="$HOME/.antidote"
+FONT_DIRS_DEFAULT="$HOME/Library/Fonts:/Library/Fonts"
+COLOR_RESET=""
+COLOR_GREEN=""
+COLOR_RED=""
+
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  COLOR_RESET=$'\033[0m'
+  COLOR_GREEN=$'\033[32m'
+  COLOR_RED=$'\033[31m'
+fi
+
+log() {
+  printf '%s\n' "$1"
+}
+
+log_ok() {
+  printf '%b\n' "${COLOR_GREEN}$1${COLOR_RESET}"
+}
+
+log_warn() {
+  printf '%b\n' "${COLOR_RED}$1${COLOR_RESET}"
+}
+
+log_error() {
+  printf '%b\n' "${COLOR_RED}$1${COLOR_RESET}" >&2
+}
 
 warn_if_fzf_missing() {
   if ! command -v fzf >/dev/null 2>&1; then
-    log "Warning: fzf is not installed. fzf-tab is configured in zsh/plugins.txt, so tab completion UI may degrade until you run: brew install fzf"
+    log_warn "Warning: fzf is not installed. fzf-tab is configured in zsh/plugins.txt, so tab completion UI may degrade until you run: brew install fzf"
+  fi
+}
+
+has_recommended_nerd_font() {
+  local font_dirs dir
+  font_dirs=${SHELL_CONFIG_FONT_DIRS:-$FONT_DIRS_DEFAULT}
+
+  IFS=':' read -r -a font_dirs_array <<<"$font_dirs"
+  for dir in "${font_dirs_array[@]}"; do
+    if [ -d "$dir" ] && find "$dir" -maxdepth 1 -type f \( -iname 'MesloLG*NF*.ttf' -o -iname 'MesloLG*NerdFont*.ttf' \) | grep -q .; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+warn_if_font_missing() {
+  if ! has_recommended_nerd_font; then
+    log_warn "Warning: the zsh prompt uses Nerd Font glyphs. Install MesloLGS NF with: brew install --cask font-meslo-lg-nerd-font"
+    log "Then set Terminal.app > Settings > Profiles > Text > Font to MesloLGS NF."
   fi
 }
 
@@ -32,8 +79,15 @@ Options:
 EOF
 }
 
-log() {
-  printf '%s\n' "$1"
+ensure_file() {
+  local target=$1
+
+  if [ -e "$target" ]; then
+    return 0
+  fi
+
+  log "Creating $target"
+  run_cmd touch "$target"
 }
 
 run_cmd() {
@@ -71,7 +125,7 @@ ensure_link() {
   local target=$2
 
   if [ ! -e "$source" ]; then
-    printf 'Missing source file: %s\n' "$source" >&2
+    log_error "Missing source file: $source"
     exit 1
   fi
 
@@ -82,13 +136,13 @@ ensure_link() {
     expected_resolved=$(resolve_existing_path "$source")
 
     if [ "$current_resolved" = "$expected_resolved" ]; then
-      log "OK: $target already points to $source"
+      log_ok "OK: $target already points to $source"
       return 0
     fi
 
     if ! $FORCE; then
-      printf 'Refusing to replace unexpected symlink: %s\n' "$target" >&2
-      printf 'Re-run with --force if you want to replace it.\n' >&2
+      log_error "Refusing to replace unexpected symlink: $target"
+      log_error "Re-run with --force if you want to replace it."
       exit 1
     fi
 
@@ -104,12 +158,12 @@ ensure_link() {
 
 ensure_antidote() {
   if [ -f "$ANTIDOTE_DIR/antidote.zsh" ]; then
-    log "OK: antidote already present at $ANTIDOTE_DIR"
+    log_ok "OK: antidote already present at $ANTIDOTE_DIR"
     return 0
   fi
 
   if ! command -v git >/dev/null 2>&1; then
-    printf 'git is required to bootstrap antidote for zsh.\n' >&2
+    log_error "git is required to bootstrap antidote for zsh."
     exit 1
   fi
 
@@ -122,7 +176,7 @@ parse_args() {
     case "$1" in
       --shell)
         if [ $# -lt 2 ]; then
-          printf 'Missing value for --shell\n' >&2
+          log_error "Missing value for --shell"
           exit 1
         fi
         TARGET_SHELL=$2
@@ -141,7 +195,7 @@ parse_args() {
         exit 0
         ;;
       *)
-        printf 'Unknown argument: %s\n' "$1" >&2
+        log_error "Unknown argument: $1"
         usage >&2
         exit 1
         ;;
@@ -151,7 +205,7 @@ parse_args() {
   case "$TARGET_SHELL" in
     bash|zsh|both) ;;
     *)
-      printf 'Invalid shell target: %s\n' "$TARGET_SHELL" >&2
+      log_error "Invalid shell target: $TARGET_SHELL"
       exit 1
       ;;
   esac
@@ -165,11 +219,13 @@ link_bash() {
 link_zsh() {
   ensure_antidote
   warn_if_fzf_missing
+  warn_if_font_missing
   ensure_link "$SCRIPT_DIR/zsh/zprofile" "$HOME/.zprofile"
   ensure_link "$SCRIPT_DIR/zsh/zshrc" "$HOME/.zshrc"
 }
 
 parse_args "$@"
+ensure_file "$HOME/.hushlogin"
 
 case "$TARGET_SHELL" in
   bash)
@@ -185,7 +241,7 @@ case "$TARGET_SHELL" in
 esac
 
 log ""
-log "Install complete."
+log_ok "Install complete."
 log "You can re-run this installer safely with: bash ./install.sh --shell both"
 if $DRY_RUN; then
   log "Dry run only: no files were changed."

@@ -46,41 +46,199 @@ if [[ -f "$HOME/.antidote/antidote.zsh" ]] && [[ -f "$__shell_config_root/zsh/pl
   antidote load "$__shell_config_root/zsh/plugins.txt"
 fi
 
+_bind_history_navigation() {
+  local up_widget down_widget
+
+  if (( ${+widgets[history-substring-search-up]} && ${+widgets[history-substring-search-down]} )); then
+    up_widget='history-substring-search-up'
+    down_widget='history-substring-search-down'
+    HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=1
+  else
+    up_widget='up-line-or-beginning-search'
+    down_widget='down-line-or-beginning-search'
+  fi
+
+  [[ -n ${terminfo[kcuu1]:-} ]] && bindkey "${terminfo[kcuu1]}" "$up_widget"
+  [[ -n ${terminfo[kcud1]:-} ]] && bindkey "${terminfo[kcud1]}" "$down_widget"
+  bindkey '^[[A' "$up_widget"
+  bindkey '^[[B' "$down_widget"
+  bindkey '^[OA' "$up_widget"
+  bindkey '^[OB' "$down_widget"
+  bindkey '^P' "$up_widget"
+  bindkey '^N' "$down_widget"
+}
+
 autoload -Uz vcs_info
 zstyle ':vcs_info:git:*' formats '%b'
 
-_update_vcs_prompt() {
-  local branch max_branch_len truncated_branch
-  vcs_info
-  branch=${vcs_info_msg_0_:-}
-  if [[ -z "$branch" ]]; then
-    __shell_branch_prompt=""
+# Maximum branch-name length before truncation; set to 0 to disable truncation.
+typeset -g SHELL_PROMPT_BRANCH_MAX_LENGTH=64
+# Spaces added on both sides of the path and branch labels.
+typeset -g SHELL_PROMPT_SEGMENT_PADDING=1
+# Blank lines inserted above the prompt bar.
+typeset -g SHELL_PROMPT_TOP_MARGIN_LINES=1
+# Background color for the path segment.
+typeset -g SHELL_PROMPT_PATH_BG=111
+# Background color for the branch segment.
+typeset -g SHELL_PROMPT_BRANCH_BG=150
+# Foreground color for text inside the colored segments.
+typeset -g SHELL_PROMPT_TEXT_FG=236
+# Foreground color for the actual input prompt on the last line.
+typeset -g SHELL_PROMPT_INPUT_FG=245
+# Powerline-style separator between prompt segments.
+typeset -g SHELL_PROMPT_SEPARATOR=''
+typeset -g __shell_prompt_top_margin=""
+typeset -g __shell_prompt_input_line="%F{${SHELL_PROMPT_INPUT_FG}}%#%f "
+typeset -g __shell_prompt_path_text=""
+typeset -g __shell_prompt_branch_text=""
+
+_shell_repeat_char() {
+  local -i count=$1
+  local char=$2
+  local result=""
+
+  while (( count > 0 )); do
+    result+="$char"
+    (( count-- ))
+  done
+
+  REPLY=$result
+}
+
+_shell_prompt_padding() {
+  _shell_repeat_char "$SHELL_PROMPT_SEGMENT_PADDING" ' '
+}
+
+_shell_prompt_top_margin() {
+  _shell_repeat_char "$SHELL_PROMPT_TOP_MARGIN_LINES" $'\n'
+}
+
+_shell_truncate_left() {
+  local text=$1
+  local -i max_len=$2
+  local -i text_len tail_len start_index
+
+  text_len=${#text}
+  if (( max_len <= 0 )); then
+    REPLY=""
     return 0
   fi
 
-  max_branch_len=24
-  truncated_branch=$branch
-  if (( ${#branch} > max_branch_len )); then
-    truncated_branch="${branch[1,max_branch_len-3]}..."
+  if (( text_len <= max_len )); then
+    REPLY=$text
+    return 0
   fi
 
-  __shell_branch_prompt=" %F{white}>%f %F{green}${truncated_branch}%f"
+  if (( max_len <= 3 )); then
+    REPLY="${text[text_len-max_len+1,text_len]}"
+    return 0
+  fi
+
+  tail_len=$(( max_len - 3 ))
+  start_index=$(( text_len - tail_len + 1 ))
+  REPLY="...${text[start_index,text_len]}"
 }
 
-precmd_functions+=( _update_vcs_prompt )
+_shell_truncate_right() {
+  local text=$1
+  local -i max_len=$2
+  local -i text_len
+
+  text_len=${#text}
+  if (( max_len <= 0 )); then
+    REPLY=""
+    return 0
+  fi
+
+  if (( text_len <= max_len )); then
+    REPLY=$text
+    return 0
+  fi
+
+  if (( max_len <= 3 )); then
+    REPLY="${text[1,max_len]}"
+    return 0
+  fi
+
+  REPLY="${text[1,max_len-3]}..."
+}
+
+_update_shell_prompt() {
+  local branch branch_text display_path max_branch_len padding truncated_branch
+  local path_segment path_arrow branch_segment branch_arrow
+  local -i path_len branch_len padding_len prompt_columns available_text_width
+  vcs_info
+  branch=${vcs_info_msg_0_:-}
+  display_path=${(%):-%~}
+  _shell_prompt_padding
+  padding=$REPLY
+  padding_len=${#padding}
+  _shell_prompt_top_margin
+  __shell_prompt_top_margin=$REPLY
+  prompt_columns=${COLUMNS:-80}
+  __shell_prompt_path_text=$display_path
+  __shell_prompt_branch_text=""
+
+  if [[ -z "$branch" ]]; then
+    available_text_width=$(( prompt_columns - (padding_len * 2) - 1 ))
+    if (( available_text_width < 1 )); then
+      available_text_width=1
+    fi
+    _shell_truncate_left "$display_path" "$available_text_width"
+    __shell_prompt_path_text=$REPLY
+    path_segment="%K{${SHELL_PROMPT_PATH_BG}}%F{${SHELL_PROMPT_TEXT_FG}}${padding}${__shell_prompt_path_text}${padding}%f"
+    path_arrow="%k%F{${SHELL_PROMPT_PATH_BG}}${SHELL_PROMPT_SEPARATOR}%f"
+    __shell_prompt_segments="${path_segment}${path_arrow}"
+    return 0
+  fi
+
+  max_branch_len=$SHELL_PROMPT_BRANCH_MAX_LENGTH
+  _shell_truncate_right "$branch" "$max_branch_len"
+  truncated_branch=$REPLY
+  path_len=${#display_path}
+  branch_len=${#truncated_branch}
+  available_text_width=$(( prompt_columns - (padding_len * 4) - 2 ))
+  if (( available_text_width < 2 )); then
+    available_text_width=2
+  fi
+
+  while (( path_len + branch_len > available_text_width )); do
+    if (( path_len >= branch_len && path_len > 4 )); then
+      ((path_len--))
+    elif (( branch_len > 4 )); then
+      ((branch_len--))
+    elif (( path_len > 1 )); then
+      ((path_len--))
+    elif (( branch_len > 1 )); then
+      ((branch_len--))
+    else
+      break
+    fi
+  done
+
+  _shell_truncate_left "$display_path" "$path_len"
+  __shell_prompt_path_text=$REPLY
+  _shell_truncate_right "$truncated_branch" "$branch_len"
+  __shell_prompt_branch_text=$REPLY
+
+  path_segment="%K{${SHELL_PROMPT_PATH_BG}}%F{${SHELL_PROMPT_TEXT_FG}}${padding}${__shell_prompt_path_text}${padding}%f"
+  branch_segment="%K{${SHELL_PROMPT_BRANCH_BG}}%F{${SHELL_PROMPT_TEXT_FG}}${padding}${__shell_prompt_branch_text}${padding}%f"
+  branch_arrow="%k%F{${SHELL_PROMPT_BRANCH_BG}}${SHELL_PROMPT_SEPARATOR}%f"
+  __shell_prompt_segments="${path_segment}%K{${SHELL_PROMPT_BRANCH_BG}}%F{${SHELL_PROMPT_PATH_BG}}${SHELL_PROMPT_SEPARATOR}%f${branch_segment}${branch_arrow}"
+}
+
+if (( ${precmd_functions[(Ie)_update_shell_prompt]} == 0 )); then
+  precmd_functions+=( _update_shell_prompt )
+fi
 
 autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
-bindkey '^[[A' up-line-or-beginning-search
-bindkey '^[[B' down-line-or-beginning-search
-bindkey '^[OA' up-line-or-beginning-search
-bindkey '^[OB' down-line-or-beginning-search
-bindkey '^P' up-line-or-beginning-search
-bindkey '^N' down-line-or-beginning-search
+_bind_history_navigation
 
 setopt PROMPT_SUBST
-PROMPT='%F{blue}%~%f${__shell_branch_prompt} %# '
+PROMPT='${__shell_prompt_top_margin}${__shell_prompt_segments}
+${__shell_prompt_input_line}'
 
 unset -f _shell_config_repo_root
 unset __shell_config_root
