@@ -740,7 +740,7 @@ Notes:
 - [x] add top-level README setup instructions including symlinking
 - [x] update bash-config README
 - [x] add repo-wide and path-specific AI instruction files
-- [ ] remove or generalize migration-specific temporary instruction-file content
+- [x] remove or generalize migration-specific temporary instruction-file content
 - [x] add smoke tests for fresh shell startup
 - [x] validate PATH and tool availability in fresh sessions
 - [x] add bash + zsh support and migration guidance

@@ -7,6 +7,7 @@ applyTo: "install.sh,bash/**,zsh/**,shared/**,local/**"
 - This area uses a direct-sourcing or symlink-based model. Do not reintroduce copy-based bootstrap or refresh flows.
 - **bash and zsh must both work**, but **zsh is the first-class interactive experience**.
 - Keep shared logic shell-agnostic where practical. Prompt, completion, history, and keybinding UX may be shell-specific.
+- Keep the zsh plugin list repo-owned in `zsh/plugins.txt`; plugin code should remain outside this repo.
 - Preserve existing behavior unless the feature plan intentionally changes it.
 - Preserve **PATH ordering** unless intentionally changing it as part of the design. Do not replace PATH with a machine-specific snapshot.
 - Keep concerns separated:
