@@ -12,6 +12,11 @@ if [ -e "${UTILS_REPO_PATH:-$HOME/Dev/utils}/local/secrets.sh" ]; then
   source "${UTILS_REPO_PATH:-$HOME/Dev/utils}/local/secrets.sh"
 fi
 
+# Optional machine-local help entries live in local/halp.txt.
+#
+# Example entry:
+# mymachine|Run my personal machine-specific helper
+#
 # Example machine-local additions:
 # export SOME_TOOL_HOME="$HOME/somewhere"
 # NVM_SCRIPT="/opt/homebrew/opt/nvm/nvm.sh"

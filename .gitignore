@@ -2,5 +2,6 @@ private.sh
 secrets.sh
 /local/private.sh
 /local/path.sh
+/local/halp.txt
 /local/secrets.sh
 node_modules

@@ -89,11 +89,15 @@ bash -lc '
   test -n "$(getBranchName)"
   declare -F shell_reload >/dev/null
   declare -F shell_update >/dev/null
+  declare -F halp >/dev/null
   declare -F zsh_plugins_edit >/dev/null
   declare -F zsh_plugins_update >/dev/null
   declare -F gpt >/dev/null
   declare -F jeeves >/dev/null
   shell_update --local --dry-run >/tmp/utils-shell-update-dry-run-bash.out
+  halp | grep -q "shell_update"
+  halp | grep -q "zsh_plugins_update"
+  halp | grep -q "halp"
   alias freshen >/dev/null
   alias loc >/dev/null
   path | head -1 | grep -Eq "^[[:space:]]*[0-9]+[[:space:]]+/"
@@ -135,11 +139,15 @@ zsh -fc '
   [[ -n "$(getBranchName)" ]]
   whence shell_reload >/dev/null
   whence shell_update >/dev/null
+  whence halp >/dev/null
   whence zsh_plugins_edit >/dev/null
   whence zsh_plugins_update >/dev/null
   whence gpt >/dev/null
   whence jeeves >/dev/null
   shell_update --local --dry-run >/tmp/utils-shell-update-dry-run-zsh.out
+  halp | grep -q "shell_update"
+  halp | grep -q "zsh_plugins_update"
+  halp | grep -q "halp"
   alias freshen >/dev/null
   alias loc >/dev/null
   path | head -1 | grep -Eq "^[[:space:]]*[0-9]+[[:space:]]+/"
@@ -158,6 +166,7 @@ HOME="$TMP_HOME" bash -ilc '
   [[ "${UTILS_REPO_PATH:-}" == "'"$REPO_ROOT"'" ]]
   declare -F shell_reload >/dev/null
   declare -F shell_update >/dev/null
+  declare -F halp >/dev/null
   declare -F define_lazy_function >/dev/null
   declare -F zsh_plugins_edit >/dev/null
   declare -F zsh_plugins_update >/dev/null
@@ -192,6 +201,7 @@ HOME="$TMP_HOME" zsh -ilc '
   [[ "${UTILS_REPO_PATH:-}" == "'"$REPO_ROOT"'" ]]
   whence shell_reload >/dev/null
   whence shell_update >/dev/null
+  whence halp >/dev/null
   whence define_lazy_function >/dev/null
   whence zsh_plugins_edit >/dev/null
   whence zsh_plugins_update >/dev/null

@@ -19,8 +19,10 @@ zsh/
   zprofile
   zshrc
 shared/
+  halp.txt
   *.sh
 local/
+  halp.example.txt
   path.example.sh
   private.example.sh
   secrets.example.sh
@@ -59,7 +61,9 @@ For zsh, it also bootstraps the **antidote** plugin manager into `~/.antidote` i
 
 - `bash/` and `zsh/` contain the symlink targets for interactive/login startup
 - `zsh/plugins.txt` declares the repo-owned zsh plugin list for antidote
+- `shared/halp.txt` is the repo-owned command list for `halp`
 - `shared/` contains tracked shell helpers loaded by both shells where practical, including `shared/path.sh` for tracked PATH rules and `shared/lazy.sh` for reusable lazy-loader patterns
+- `local/halp.txt` is the optional machine-local extension file for `halp`
 - `local/path.sh` is the optional machine-local PATH layer
 - `local/private.sh` is the optional machine-local hook
 - `local/secrets.sh` is the optional untracked secrets layer
@@ -69,6 +73,7 @@ To bootstrap the local files:
 ```bash
 cp ./local/private.example.sh ./local/private.sh
 cp ./local/path.example.sh ./local/path.sh
+cp ./local/halp.example.txt ./local/halp.txt
 cp ./local/secrets.example.sh ./local/secrets.sh
 ```
 
@@ -85,8 +90,7 @@ shell_update
 This:
 
 1. pulls the latest repo changes with `git pull --ff-only`
-2. reruns `bash "$HOME/Dev/utils/install.sh" --shell both`
-3. reloads the current shell session
+2. reloads the current shell session
 
 If you only want to pick up **local edits**:
 
@@ -103,6 +107,15 @@ zsh_plugins_update
 
 - `zsh_plugins_edit` opens `zsh/plugins.txt`
 - `zsh_plugins_update` runs `antidote update` and reloads zsh when run from zsh
+
+For shell-management help:
+
+```bash
+halp
+```
+
+- `halp` prints one command per line from `shared/halp.txt`
+- optional machine-local additions can live in `local/halp.txt`
 
 ### Deploy helper
 

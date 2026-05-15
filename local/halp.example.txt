@@ -1,0 +1,4 @@
+# Optional machine-local command help entries.
+# Format: command|short description
+
+# mymachine|Run my personal machine-specific helper

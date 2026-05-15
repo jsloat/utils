@@ -3,6 +3,8 @@
 UTILS_REPO_PATH=${UTILS_REPO_PATH:-"$HOME/Dev/utils"}
 ZSH_PLUGIN_FILE="$UTILS_REPO_PATH/zsh/plugins.txt"
 ANTIDOTE_DIR="$HOME/.antidote"
+HALP_FILE="$UTILS_REPO_PATH/shared/halp.txt"
+LOCAL_HALP_FILE="$UTILS_REPO_PATH/local/halp.txt"
 
 _pull_latest_shell_config() {
   _echoAnnouncement 'Pulling latest settings from GitHub'
@@ -33,21 +35,51 @@ shell_reload() {
 }
 
 shell_update() {
-  local shell_target="both"
-  local install_args=(--shell "$shell_target")
-  if ! _has_param "--local" "$@"; then
-    _pull_latest_shell_config
-  fi
   if _has_param "--dry-run" "$@"; then
-    install_args+=(--dry-run)
-  fi
-  bash "$UTILS_REPO_PATH/install.sh" "${install_args[@]}"
-  if _has_param "--dry-run" "$@"; then
+    if ! _has_param "--local" "$@"; then
+      _echoAnnouncement "Dry run: would pull latest settings from GitHub."
+    fi
     _echoAnnouncement "Dry run only: shell was not reloaded."
     return 0
   fi
+
+  if ! _has_param "--local" "$@"; then
+    _pull_latest_shell_config
+  fi
+
   _reload_current_shell
   _echoAnnouncement "Done"
+}
+
+_print_halp_entries() {
+  local file=$1
+  if [[ ! -f "$file" ]]; then
+    return 0
+  fi
+
+  while IFS='|' read -r command description; do
+    if [[ -z ${command:-} ]] || [[ ${command:0:1} == '#' ]]; then
+      continue
+    fi
+    printf '%s|%s\n' "$command" "$description"
+  done <"$file"
+}
+
+halp() {
+  printf '\n'
+  printf '%s\n' "$(_format "halp" bold blue)"
+  printf '%s\n' "$(_format "------------------------------" dim)"
+
+  {
+    _print_halp_entries "$HALP_FILE"
+    _print_halp_entries "$LOCAL_HALP_FILE"
+  } | LC_ALL=C sort -t'|' -k1,1 | while IFS='|' read -r command description; do
+    printf '  %s  %s\n' \
+      "$(_format "$(printf '%-28s' "$command")" bold green)" \
+      "$(_format "$description" dim)"
+  done
+
+  printf '\n'
 }
 
 zsh_plugins_edit() {

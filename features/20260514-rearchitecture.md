@@ -576,7 +576,7 @@ Use this checklist when applying the new setup on the other machine:
 2. capture the current effective `PATH` for later comparison
 3. record which shell Terminal.app and VS Code are currently configured to launch
 4. back up any existing `~/.bash_profile`, `~/.bashrc`, `~/.zprofile`, and `~/.zshrc`
-5. confirm whether local/private and secrets files already exist and where their contents should live
+5. confirm whether local/private and secrets files already exist and how any old private-file contents should be split into `local/path.sh`, `local/private.sh`, and `local/secrets.sh`
 6. run `bash ./install.sh --shell both --dry-run`
 7. run `bash ./install.sh --shell both`
 8. open a fresh bash session and a fresh zsh session
@@ -588,7 +588,7 @@ Use this checklist when applying the new setup on the other machine:
 
 Use a prompt like this in a future session on the other machine:
 
-> Migrate my shell setup in this repo to the current symlink-based workflow. Before changing anything, capture my current PATH and shell defaults, back up existing dotfiles, inspect any local/private and secrets files, run `bash ./install.sh --shell both --dry-run`, then run the real install, open fresh bash and zsh sessions, run `npm run test:shell-config`, and confirm the final PATH ordering matches the original unless the feature plan documents an intentional difference. Do not push or commit anything.
+> Migrate my shell setup in this repo to the current symlink-based workflow. Before changing anything, capture my current PATH and shell defaults, back up existing dotfiles, inspect any old private/secrets files and map their contents into `local/path.sh`, `local/private.sh`, and `local/secrets.sh`, run `bash ./install.sh --shell both --dry-run`, then run the real install, open fresh bash and zsh sessions, run `npm run test:shell-config`, and confirm the final PATH ordering matches the original unless the feature plan documents an intentional difference. Do not push or commit anything.
 
 ## Chosen architecture decisions
 
