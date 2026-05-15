@@ -15,6 +15,7 @@ bash/
   bash_profile
   bashrc
 zsh/
+  plugins.txt
   zprofile
   zshrc
 shared/
@@ -52,10 +53,13 @@ The installer currently manages:
 
 It backs up conflicting files and is safe to re-run.
 
+For zsh, it also bootstraps the **antidote** plugin manager into `~/.antidote` if needed.
+
 ### Shared vs local shell files
 
 - `bash/` and `zsh/` contain the symlink targets for interactive/login startup
-- `shared/` contains tracked shell helpers loaded by both shells where practical, including `shared/path.sh` for tracked PATH rules
+- `zsh/plugins.txt` declares the repo-owned zsh plugin list for antidote
+- `shared/` contains tracked shell helpers loaded by both shells where practical, including `shared/path.sh` for tracked PATH rules and `shared/lazy.sh` for reusable lazy-loader patterns
 - `local/path.sh` is the optional machine-local PATH layer
 - `local/private.sh` is the optional machine-local hook
 - `local/secrets.sh` is the optional untracked secrets layer
@@ -89,6 +93,16 @@ If you only want to pick up **local edits**:
 ```bash
 shell_reload
 ```
+
+For the repo-owned zsh plugin layer:
+
+```bash
+zsh_plugins_edit
+zsh_plugins_update
+```
+
+- `zsh_plugins_edit` opens `zsh/plugins.txt`
+- `zsh_plugins_update` runs `antidote update` and reloads zsh when run from zsh
 
 ### Deploy helper
 
@@ -146,3 +160,4 @@ Use **Terminal: Select Default Profile** and choose the shell you want VS Code t
 
 - `shell_update` uses the repo path exported by the repo-managed shell entrypoints, so the update flow follows the actual checkout location instead of assuming one hard-coded path.
 - The shell smoke tests cover the shared helpers plus fresh bash/zsh startup from the symlinked entrypoints.
+- The current zsh plugin layer is repo-owned config with antidote-managed installs. Plugin code itself is not vendored into this repo.

@@ -14,4 +14,7 @@ fi
 
 # Example machine-local additions:
 # export SOME_TOOL_HOME="$HOME/somewhere"
+# NVM_SCRIPT="/opt/homebrew/opt/nvm/nvm.sh"
+# _load_nvm_impl() { source "$NVM_SCRIPT"; }
+# define_lazy_function nvm _load_nvm_impl
 # alias mymachine="echo hello"

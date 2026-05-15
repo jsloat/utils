@@ -674,6 +674,7 @@ Notes:
 - move shared tracked logic into repo-root `shared/`
 - create repo-root `local/` example files for the private/secrets contract
 - move or replace legacy files under `shared-configs/bash-config/`
+- after rigorous shell validation, delete the legacy untracked `shared-configs/bash-config/bash_utils/private.sh` so the machine-local source of truth is only `local/private.sh`
 - update all sourcing paths as files move
 - update `package.json` scripts, smoke tests, and installer targets as files move
 - when moving a file, confirm the smoke suite still covers any important user-facing functions that file owns; add or adjust tests before considering the move complete
@@ -701,6 +702,7 @@ Notes:
 ### Phase 6: dual-shell support and optional migration
 
 - add zsh wrappers while preserving bash support
+- add a repo-owned zsh plugin layer while keeping plugin code out of the repo
 - document how to switch Terminal to zsh and back
 - add zsh completion/history initialization via `compinit`
 - document the migration procedure for the other machine
@@ -731,6 +733,7 @@ Notes:
 - [x] design `local/private.sh` loading behavior
 - [x] expand smoke-test coverage across current shell-config files
 - [x] flatten repo layout and move shell files to the new structure
+- [x] delete the legacy untracked `shared-configs/bash-config/bash_utils/private.sh` after rigorous testing confirms `local/private.sh` is the only needed machine-local file
 - [x] replace copy-based deployment model
 - [x] add install script for symlink/bootstrap setup
 - [x] simplify `system.sh` to reload/inspect responsibilities
@@ -741,6 +744,7 @@ Notes:
 - [x] add smoke tests for fresh shell startup
 - [x] validate PATH and tool availability in fresh sessions
 - [x] add bash + zsh support and migration guidance
+- [x] add repo-owned zsh plugin configuration with external plugin-manager bootstrap
 - [x] document and rehearse migration steps for the other machine
 
 ## Recommendation

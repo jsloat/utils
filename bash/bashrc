@@ -19,6 +19,7 @@ export UTILS_REPO_PATH="$__shell_config_root"
 
 source "$__shell_config_root"/shared/textFormatting.sh
 source "$__shell_config_root"/shared/common.sh
+source "$__shell_config_root"/shared/lazy.sh
 source "$__shell_config_root"/shared/path.sh
 source "$__shell_config_root"/shared/macOS.sh
 source "$__shell_config_root"/shared/git.sh

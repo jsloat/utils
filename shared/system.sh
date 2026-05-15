@@ -1,6 +1,8 @@
 #!/bin/bash
 
 UTILS_REPO_PATH=${UTILS_REPO_PATH:-"$HOME/Dev/utils"}
+ZSH_PLUGIN_FILE="$UTILS_REPO_PATH/zsh/plugins.txt"
+ANTIDOTE_DIR="$HOME/.antidote"
 
 _pull_latest_shell_config() {
   _echoAnnouncement 'Pulling latest settings from GitHub'
@@ -46,6 +48,37 @@ shell_update() {
   fi
   _reload_current_shell
   _echoAnnouncement "Done"
+}
+
+zsh_plugins_edit() {
+  if command -v code >/dev/null 2>&1; then
+    code "$ZSH_PLUGIN_FILE"
+  else
+    printf '%s\n' "$ZSH_PLUGIN_FILE"
+  fi
+}
+
+zsh_plugins_update() {
+  if [[ ! -f "$ZSH_PLUGIN_FILE" ]]; then
+    _echoError "Missing zsh plugin file: $ZSH_PLUGIN_FILE"
+    return 1
+  fi
+
+  if [[ ! -f "$ANTIDOTE_DIR/antidote.zsh" ]]; then
+    _echoError "antidote is not installed. Run: bash \"$UTILS_REPO_PATH/install.sh\" --shell zsh"
+    return 1
+  fi
+
+  _echoAnnouncement "Updating zsh plugins from $ZSH_PLUGIN_FILE"
+  zsh -ic "source \"$ANTIDOTE_DIR/antidote.zsh\" && antidote update"
+
+  if [[ -n ${ZSH_VERSION:-} ]]; then
+    _echoAnnouncement "Reloading zsh session"
+    # shellcheck disable=SC1090,SC1091
+    source "$HOME/.zshrc"
+  else
+    _echoAnnouncement "Done. Reload zsh to pick up plugin changes."
+  fi
 }
 
 reload() {

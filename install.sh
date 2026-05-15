@@ -8,6 +8,7 @@ DRY_RUN=false
 FORCE=false
 TARGET_SHELL="$DEFAULT_SHELL"
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
+ANTIDOTE_DIR="$HOME/.antidote"
 
 usage() {
   cat <<'EOF'
@@ -95,6 +96,21 @@ ensure_link() {
   run_cmd ln -s "$source" "$target"
 }
 
+ensure_antidote() {
+  if [ -f "$ANTIDOTE_DIR/antidote.zsh" ]; then
+    log "OK: antidote already present at $ANTIDOTE_DIR"
+    return 0
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    printf 'git is required to bootstrap antidote for zsh.\n' >&2
+    exit 1
+  fi
+
+  log "Installing antidote -> $ANTIDOTE_DIR"
+  run_cmd git clone --depth=1 https://github.com/mattmc3/antidote.git "$ANTIDOTE_DIR"
+}
+
 parse_args() {
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -141,6 +157,7 @@ link_bash() {
 }
 
 link_zsh() {
+  ensure_antidote
   ensure_link "$SCRIPT_DIR/zsh/zprofile" "$HOME/.zprofile"
   ensure_link "$SCRIPT_DIR/zsh/zshrc" "$HOME/.zshrc"
 }

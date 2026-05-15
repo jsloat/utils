@@ -18,6 +18,7 @@ export UTILS_REPO_PATH="$__shell_config_root"
 
 source "$__shell_config_root"/shared/textFormatting.sh
 source "$__shell_config_root"/shared/common.sh
+source "$__shell_config_root"/shared/lazy.sh
 source "$__shell_config_root"/shared/path.sh
 source "$__shell_config_root"/shared/macOS.sh
 source "$__shell_config_root"/shared/git.sh
@@ -33,12 +34,29 @@ fi
 autoload -Uz compinit
 compinit -i
 
-_prettify_git_branch() {
-  git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ [\1]/'
-}
+setopt AUTO_MENU
+setopt COMPLETE_IN_WORD
 
-setopt PROMPT_SUBST
-PROMPT=$'\n%F{green}%~\n$(_prettify_git_branch)%f: '
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' rehash true
+
+if [[ -f "$HOME/.antidote/antidote.zsh" ]] && [[ -f "$__shell_config_root/zsh/plugins.txt" ]]; then
+  source "$HOME/.antidote/antidote.zsh"
+  antidote load "$__shell_config_root/zsh/plugins.txt"
+fi
+
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey '^[[A' up-line-or-beginning-search
+bindkey '^[[B' down-line-or-beginning-search
+bindkey '^[OA' up-line-or-beginning-search
+bindkey '^[OB' down-line-or-beginning-search
+bindkey '^P' up-line-or-beginning-search
+bindkey '^N' down-line-or-beginning-search
+
+PROMPT='%F{cyan}%~%f %# '
 
 unset -f _shell_config_repo_root
 unset __shell_config_root
