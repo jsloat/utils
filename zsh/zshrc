@@ -46,6 +46,29 @@ if [[ -f "$HOME/.antidote/antidote.zsh" ]] && [[ -f "$__shell_config_root/zsh/pl
   antidote load "$__shell_config_root/zsh/plugins.txt"
 fi
 
+autoload -Uz vcs_info
+zstyle ':vcs_info:git:*' formats '%b'
+
+_update_vcs_prompt() {
+  local branch max_branch_len truncated_branch
+  vcs_info
+  branch=${vcs_info_msg_0_:-}
+  if [[ -z "$branch" ]]; then
+    __shell_branch_prompt=""
+    return 0
+  fi
+
+  max_branch_len=24
+  truncated_branch=$branch
+  if (( ${#branch} > max_branch_len )); then
+    truncated_branch="${branch[1,max_branch_len-3]}..."
+  fi
+
+  __shell_branch_prompt=" %F{white}>%f %F{green}${truncated_branch}%f"
+}
+
+precmd_functions+=( _update_vcs_prompt )
+
 autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
@@ -56,7 +79,8 @@ bindkey '^[OB' down-line-or-beginning-search
 bindkey '^P' up-line-or-beginning-search
 bindkey '^N' down-line-or-beginning-search
 
-PROMPT='%F{cyan}%~%f %# '
+setopt PROMPT_SUBST
+PROMPT='%F{blue}%~%f${__shell_branch_prompt} %# '
 
 unset -f _shell_config_repo_root
 unset __shell_config_root

@@ -1,6 +1,12 @@
 #!/bin/bash
 
-MAIN_BRANCH_NAME=${OVERRIDE_MAIN_BRANCH_NAME:-master}
+mainBranchName() {
+  if typeset -f _getMainBranchName >/dev/null 2>&1; then
+    _getMainBranchName
+  else
+    printf '%s\n' "master"
+  fi
+}
 
 # Get current branch name
 getBranchName() {
@@ -22,18 +28,20 @@ pushup() {
   git push -u origin "$(getBranchName)"
 }
 
-# Create a new branch of master locally, then push it to origin
+# Create a new branch of the repo's main branch locally, then push it to origin
 newbr() {
   local branchName=$1
   local prefix=$2
+  local main_branch
   if [[ $# -eq 0 ]]; then
     echo "Provide branch name"
     return 1
   fi
+  main_branch=$(mainBranchName)
   local prefixedBranchName="$prefix$branchName"
-  git checkout "$MAIN_BRANCH_NAME"
+  git checkout "$main_branch"
   git fetch
-  git reset --hard origin/"$MAIN_BRANCH_NAME"
+  git reset --hard origin/"$main_branch"
   git checkout -b "$prefixedBranchName"
   git push -u origin "$prefixedBranchName"
 }
@@ -46,15 +54,21 @@ goback() {
 
 # Git branch
 gb() {
+  if [[ -n ${ZSH_VERSION:-} ]]; then
+    setopt localoptions ksharrays
+  fi
+
   local query
   local branchPattern
   local display_names
   local branch_names
   local currBranch
   local raw_branches_str
-  local OLD_IFS
-  local raw_branches_arr
   local current_timestamp
+  local brName
+  local timestamp
+  local display_name
+  local days_ago
   query=$1
   branchPattern="refs/heads/"$([ $# -eq 0 ] && echo '' || echo "**/*$query*")
   display_names=()
@@ -63,53 +77,53 @@ gb() {
   current_timestamp=$(date +%s)
 
   raw_branches_str=$(git for-each-ref --format='%(refname:short)|%(committerdate:unix)' "$branchPattern" --ignore-case | sort -t'|' -k2 -nr)
-  # https://stackoverflow.com/questions/24628076/convert-multiline-string-to-array
-  OLD_IFS=$IFS
-  IFS=$'\n'
-  # shellcheck disable=2206
-  raw_branches_arr=($raw_branches_str)
-  IFS=$OLD_IFS
 
-  # Build parallel arrays instead of using associative array
-  for index in "${!raw_branches_arr[@]}"; do
-    local line=${raw_branches_arr[$index]}
-    local brName=${line%|*}
-    local timestamp=${line#*|}
+  while IFS='|' read -r brName timestamp; do
+    [[ -z ${brName:-} ]] && continue
 
     if [[ $brName != "$currBranch" ]]; then
-      local days_ago=$(( (current_timestamp - timestamp) / 86400 ))
-      local display_name="$brName (-${days_ago}d)"
+      days_ago=$(( (current_timestamp - timestamp) / 86400 ))
+      display_name="$brName (-${days_ago}d)"
       display_names+=("$display_name")
       branch_names+=("$brName")
     fi
-  done
+  done <<< "$raw_branches_str"
 
   local optsLen=${#display_names[@]}
-  COLUMNS=1
+  local selection
   case $optsLen in
   0) _echoError "No branches found" ;;
   1) git checkout "${branch_names[0]}" ;;
-  *) select display_name in "${display_names[@]}"; do
-    # Find the index of the selected display name
-    for i in "${!display_names[@]}"; do
-      if [[ "${display_names[$i]}" == "$display_name" ]]; then
-        git checkout "${branch_names[$i]}"
+  *)
+    for ((i = 0; i < optsLen; i++)); do
+      printf '%d) %s\n' "$((i + 1))" "${display_names[$i]}"
+    done
+
+    while true; do
+      printf 'Select branch number: '
+      read -r selection
+
+      if [[ $selection =~ ^[0-9]+$ ]] && (( selection >= 1 && selection <= optsLen )); then
+        git checkout "${branch_names[$((selection - 1))]}"
         break
       fi
+
+      _echoError "Enter a number between 1 and $optsLen."
     done
-    break
-  done ;;
+    ;;
   esac
 }
 
 # First param is command (push or push-force)
-# Optional --force flag to force push on master branch.
+# Optional --force flag to force push on the repo's main branch.
 _runGitCommandWithMasterProtection() {
   local commandKey=$1
   local br
+  local main_branch
   br=$(getBranchName)
-  if [[ $br == "$MAIN_BRANCH_NAME" ]] && ! _has_param "--force" "$@"; then
-    _echoError "Use '--force' flag to perform this operation on master. Are you on the correct branch?"
+  main_branch=$(mainBranchName)
+  if [[ $br == "$main_branch" ]] && ! _has_param "--force" "$@"; then
+    _echoError "Use '--force' flag to perform this operation on $main_branch. Are you on the correct branch?"
     return 1
   fi
 
@@ -171,23 +185,45 @@ glol() {
 
 alias gc-='git checkout -'
 alias gm-='git merge -'
-alias grim='git rebase -i $MAIN_BRANCH_NAME'
 alias gcwip='git add -A;git commit -m "wip"'
 alias gst='git status'
 alias sup='git fetch &> /dev/null;gst'
-# shellcheck disable=2139
-alias gcm="git checkout $MAIN_BRANCH_NAME"
 alias gl='git pull'
-# Fetch latest master, then interactive rebase on it
-alias fgrim='gcm &> /dev/null;gl &> /dev/null;gc- &> /dev/null;grim'
-# Switch to master then delete previous local branch
-alias gdel='gcm &> /dev/null;git branch -D @{-1}'
 # Reset hard to remote branch
 alias rerem='git reset --hard origin/$(getBranchName)'
 # Reset hard to previous local branch
 alias relast='git reset --hard @{-1}'
-alias freshen='git pull --rebase origin $MAIN_BRANCH_NAME'
 alias amend='git add .;git commit --amend'
 alias lastcommit='git log -1 --pretty=%B | cat'
-# Show LOC change stats for current branch compared to main branch.
-alias loc='git fetch &> /dev/null;git diff --shortstat origin/$MAIN_BRANCH_NAME'
+
+grim() {
+  git rebase -i "$(mainBranchName)"
+}
+
+gcm() {
+  git checkout "$(mainBranchName)"
+}
+
+# Fetch latest default branch, then interactive rebase on it
+fgrim() {
+  gcm &> /dev/null
+  gl &> /dev/null
+  gc- &> /dev/null
+  grim
+}
+
+# Switch to default branch then delete previous local branch
+gdel() {
+  gcm &> /dev/null
+  git branch -D "@{-1}"
+}
+
+freshen() {
+  git pull --rebase origin "$(mainBranchName)"
+}
+
+# Show LOC change stats for current branch compared to the repo's main branch.
+loc() {
+  git fetch &> /dev/null
+  git diff --shortstat "origin/$(mainBranchName)"
+}

@@ -90,16 +90,39 @@ bash -lc '
   declare -F shell_reload >/dev/null
   declare -F shell_update >/dev/null
   declare -F halp >/dev/null
+  declare -F gcm >/dev/null
   declare -F zsh_plugins_edit >/dev/null
   declare -F zsh_plugins_update >/dev/null
   declare -F gpt >/dev/null
   declare -F jeeves >/dev/null
   shell_update --local --dry-run >/tmp/utils-shell-update-dry-run-bash.out
+  _getMainBranchName() { if [[ $(pwd) == "'"$REPO_ROOT"'" ]]; then echo master; else echo main; fi; }
+  [[ "$(mainBranchName)" == "master" ]]
+  tmp_repo=$(mktemp -d)
+  cd "$tmp_repo"
+  git init -q
+  git config user.email test@example.com
+  git config user.name "Test User"
+  git branch -m main
+  initial_branch=$(git symbolic-ref --short HEAD)
+  touch smoke.txt
+  git add smoke.txt
+  git commit -qm init
+  git checkout -qb feature/gb-other
+  git checkout -q "$initial_branch"
+  git checkout -qb feature/gb-smoke
+  git checkout -q "$initial_branch"
+  gb gb <<< "1" >/tmp/utils-gb-bash.out
+  [[ "$(getBranchName)" == "feature/gb-smoke" ]]
+  gcm >/tmp/utils-gcm-bash.out
+  [[ "$(getBranchName)" == "main" ]]
+  rm -rf "$tmp_repo"
+  cd "'"$REPO_ROOT"'"
   halp | grep -q "shell_update"
   halp | grep -q "zsh_plugins_update"
   halp | grep -q "halp"
-  alias freshen >/dev/null
-  alias loc >/dev/null
+  declare -F freshen >/dev/null
+  declare -F loc >/dev/null
   path | head -1 | grep -Eq "^[[:space:]]*[0-9]+[[:space:]]+/"
 '
 
@@ -140,16 +163,39 @@ zsh -fc '
   whence shell_reload >/dev/null
   whence shell_update >/dev/null
   whence halp >/dev/null
+  whence gcm >/dev/null
   whence zsh_plugins_edit >/dev/null
   whence zsh_plugins_update >/dev/null
   whence gpt >/dev/null
   whence jeeves >/dev/null
   shell_update --local --dry-run >/tmp/utils-shell-update-dry-run-zsh.out
+  _getMainBranchName() { if [[ $(pwd) == "'"$REPO_ROOT"'" ]]; then echo master; else echo main; fi; }
+  [[ "$(mainBranchName)" == "master" ]]
+  tmp_repo=$(mktemp -d)
+  cd "$tmp_repo"
+  git init -q
+  git config user.email test@example.com
+  git config user.name "Test User"
+  git branch -m main
+  initial_branch=$(git symbolic-ref --short HEAD)
+  touch smoke.txt
+  git add smoke.txt
+  git commit -qm init
+  git checkout -qb feature/gb-other
+  git checkout -q "$initial_branch"
+  git checkout -qb feature/gb-smoke
+  git checkout -q "$initial_branch"
+  gb gb <<< "1" >/tmp/utils-gb-zsh.out
+  [[ "$(getBranchName)" == "feature/gb-smoke" ]]
+  gcm >/tmp/utils-gcm-zsh.out
+  [[ "$(getBranchName)" == "main" ]]
+  rm -rf "$tmp_repo"
+  cd "'"$REPO_ROOT"'"
   halp | grep -q "shell_update"
   halp | grep -q "zsh_plugins_update"
   halp | grep -q "halp"
-  alias freshen >/dev/null
-  alias loc >/dev/null
+  whence freshen >/dev/null
+  whence loc >/dev/null
   path | head -1 | grep -Eq "^[[:space:]]*[0-9]+[[:space:]]+/"
 '
 
@@ -206,13 +252,18 @@ HOME="$TMP_HOME" zsh -ilc '
   whence zsh_plugins_edit >/dev/null
   whence zsh_plugins_update >/dev/null
   whence compdef >/dev/null
+  whence vcs_info >/dev/null
+  whence _update_vcs_prompt >/dev/null
+  _update_vcs_prompt
   setopt | grep -qx "automenu"
   setopt | grep -qx "completeinword"
+  setopt | grep -qx "promptsubst"
   bindkey "^[[A" | grep -q "up-line-or-beginning-search"
   bindkey "^[[B" | grep -q "down-line-or-beginning-search"
   bindkey "^[OA" | grep -q "up-line-or-beginning-search"
   bindkey "^[OB" | grep -q "down-line-or-beginning-search"
-  [[ "$PROMPT" != *"_prettify_git_branch"* ]]
+  [[ "$PROMPT" == *\${__shell_branch_prompt}* ]]
+  [[ "${__shell_branch_prompt:-}" == *">"* ]]
   [[ "${ANTIDOTE_LOADED_FROM:-}" == "'"$REPO_ROOT"'/zsh/plugins.txt" ]]
   if [[ -f "'"$REPO_ROOT"'/local/private.sh" ]]; then
     whence go >/dev/null
