@@ -56,6 +56,7 @@ The installer currently manages:
 It backs up conflicting files and is safe to re-run.
 
 For zsh, it also bootstraps the **antidote** plugin manager into `~/.antidote` if needed.
+If `fzf` is missing, the installer warns because `fzf-tab` is configured in `zsh/plugins.txt` and its richer completion UI depends on `fzf`.
 
 ### Shared vs local shell files
 
@@ -107,6 +108,7 @@ zsh_plugins_update
 
 - `zsh_plugins_edit` opens `zsh/plugins.txt`
 - `zsh_plugins_update` runs `antidote update` and reloads zsh when run from zsh
+- if `fzf-tab` is enabled, install `fzf` with `brew install fzf` so tab completion gets the full interactive UI instead of degraded fallback behavior
 
 For shell-management help:
 

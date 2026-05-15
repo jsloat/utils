@@ -50,8 +50,9 @@ log "Checking installer dry-run"
 bash ./install.sh --dry-run --shell both >/tmp/utils-shell-install-dry-run.out
 
 log "Checking zsh plugin bootstrap dry-run"
-HOME="$TMP_HOME" bash ./install.sh --dry-run --shell zsh >/tmp/utils-shell-install-zsh-dry-run.out
+PATH="/usr/bin:/bin" HOME="$TMP_HOME" bash ./install.sh --dry-run --shell zsh >/tmp/utils-shell-install-zsh-dry-run.out
 grep -q "Installing antidote" /tmp/utils-shell-install-zsh-dry-run.out
+grep -q "fzf is not installed" /tmp/utils-shell-install-zsh-dry-run.out
 
 log "Checking shared helper sourcing in bash"
 bash -lc '

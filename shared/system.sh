@@ -101,6 +101,10 @@ zsh_plugins_update() {
     return 1
   fi
 
+  if ! command -v fzf >/dev/null 2>&1; then
+    _echoAnnouncement "fzf is not installed. fzf-tab is configured, so install it with: brew install fzf"
+  fi
+
   _echoAnnouncement "Updating zsh plugins from $ZSH_PLUGIN_FILE"
   zsh -ic "source \"$ANTIDOTE_DIR/antidote.zsh\" && antidote update"
 

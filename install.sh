@@ -10,6 +10,12 @@ TARGET_SHELL="$DEFAULT_SHELL"
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
 ANTIDOTE_DIR="$HOME/.antidote"
 
+warn_if_fzf_missing() {
+  if ! command -v fzf >/dev/null 2>&1; then
+    log "Warning: fzf is not installed. fzf-tab is configured in zsh/plugins.txt, so tab completion UI may degrade until you run: brew install fzf"
+  fi
+}
+
 usage() {
   cat <<'EOF'
 Usage: bash ./install.sh [--shell bash|zsh|both] [--dry-run] [--force]
@@ -158,6 +164,7 @@ link_bash() {
 
 link_zsh() {
   ensure_antidote
+  warn_if_fzf_missing
   ensure_link "$SCRIPT_DIR/zsh/zprofile" "$HOME/.zprofile"
   ensure_link "$SCRIPT_DIR/zsh/zshrc" "$HOME/.zshrc"
 }
